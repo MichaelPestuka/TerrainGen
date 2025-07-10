@@ -1,0 +1,12 @@
+# Backend
+
+TerrainGenBackend/TerrainGenBackend
+
+
+# Frontend
+
+node_modules
+
+# general
+
+*.svg

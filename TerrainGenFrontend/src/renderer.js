@@ -1,9 +1,8 @@
 import * as THREE from 'three';
 import { createNoise2D } from 'simplex-noise';
-import { PI } from 'three/tsl';
 import { degToRad } from 'three/src/math/MathUtils.js';
 
-const terrain_div = 250;
+const terrain_div = 81;
 const terrain_scale = 0.02;
 
 
@@ -11,7 +10,7 @@ const _VS = `
 varying vec4 v_Pos;
 
 void main() {
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, position.y * 3.0, position.z, 1.0);
     v_Pos = vec4(position, 1.0);
 }
 `;
@@ -25,9 +24,13 @@ uniform float terrain_opacity;
 varying vec4 v_Pos;
 
 void main() {
-    // float relative_height = (v_Pos.y + cameraPosition.y - min_y) / (max_y - min_y);
     float relative_height = (v_Pos.y - min_y) / (max_y - min_y);
-    gl_FragColor = vec4(relative_height * 0.8, relative_height *  0.4, relative_height * 0.1, relative_height);
+    // float relative_height = v_Pos.y;
+    gl_FragColor = vec4(relative_height , relative_height , relative_height , 1.0);
+    if(relative_height < 0.01)
+    {
+        gl_FragColor = vec4(0.3, 0.3, 1.0, 1.0);
+    }
 }
 `;
 
@@ -60,7 +63,6 @@ function getIndices(div)
             indices.push(index + 1);
         }
     }
-    console.log(indices);
     return indices;
 }
 
@@ -82,11 +84,10 @@ function getPositions(div, scale)
             positions.push(y / scale);
         }
     }
-    console.log(positions);
     return [new Float32Array(positions), min_y, max_y];
 }
 
-export function startRenderer()
+export function startRenderer(usePremadeValues, premadeValues)
 {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -99,9 +100,29 @@ export function startRenderer()
 
     let pos_ret = getPositions(terrain_div, terrain_div * terrain_scale);
 
-    let positions = pos_ret[0];
-    let min_y = pos_ret[1];
-    let max_y = pos_ret[2];
+    var positions, min_y, max_y
+    if(usePremadeValues == true)
+    {
+        var new_positions = [];
+        for(let x = 0; x < terrain_div; x++)
+        {
+            for(let y = 0; y < terrain_div; y++)
+            {
+                new_positions.push(x / (terrain_div * terrain_scale));
+                new_positions.push(premadeValues[x + terrain_div*y]);
+                new_positions.push(y / (terrain_div * terrain_scale));
+            }
+        }
+        positions = new Float32Array(new_positions);
+        min_y = Math.min.apply(this, premadeValues);
+        max_y = Math.max.apply(this, premadeValues);  
+    }
+    else
+    {
+        positions = pos_ret[0];
+        min_y = pos_ret[1];
+        max_y = pos_ret[2];
+    }
     terrain_geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     terrain_geometry.setIndex(getIndices(terrain_div));
     terrain_geometry.computeVertexNormals();

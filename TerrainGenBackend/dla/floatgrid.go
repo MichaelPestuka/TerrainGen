@@ -1,6 +1,10 @@
 package dla
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/larspensjo/Go-simplex-noise/simplexnoise"
+)
 
 type FloatGrid struct {
 	width  int
@@ -33,12 +37,12 @@ func (f FloatGrid) SetValue(x int, y int, value float64) {
 }
 
 func (f FloatGrid) Print() {
-	for x := range f.width {
-		for y := range f.height {
+	for y := range f.height {
+		for x := range f.width {
 			if f.Value(x, y) < 0.01 {
-				fmt.Printf("  .   ")
+				fmt.Printf("  .  ")
 			} else {
-				fmt.Printf(" %.2f ", f.Value(x, y))
+				fmt.Printf(" %.1f ", f.Value(x, y))
 			}
 		}
 		fmt.Printf("\n")
@@ -87,4 +91,12 @@ func (f FloatGrid) ExportHeights() []float64 {
 		}
 	}
 	return exp
+}
+
+func (f *FloatGrid) SimplexFill(octaves int) {
+	for x := range f.width {
+		for y := range f.height {
+			simplexnoise.Noise2(float64(x), float64(y))
+		}
+	}
 }

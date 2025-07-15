@@ -40,6 +40,13 @@ func (g Grid) SetOccupation(x int, y int, Occupation bool) {
 	g.Tiles[x][y].Occupied = Occupation
 }
 
+func (g Grid) Occupation(x int, y int) bool {
+	if x < 0 || x >= g.width || y < 0 || y >= g.height {
+		return true
+	}
+	return g.Tiles[x][y].Occupied
+}
+
 func (g Grid) PrintGrid() {
 	for y := range g.width {
 		for x := range g.height {
@@ -122,12 +129,20 @@ func (g *Grid) UpscaleBy3() {
 	*g = upscaled
 }
 
-func (g Grid) ToFloatGrid() FloatGrid {
+func (g Grid) ToFloatGrid(useEndDistance bool) FloatGrid {
 	f := NewFloatGrid(g.width, g.height)
 	for x := range g.width {
 		for y := range g.height {
 			if g.Tile(x, y).Occupied {
-				f.SetValue(x, y, 1.0)
+				if useEndDistance {
+					if g.Tile(x, y).EndDist >= 0 {
+						f.SetValue(x, y, 1.0/(1.0+float64(g.Tile(x, y).EndDist)))
+					} else {
+						f.SetValue(x, y, 0.0)
+					}
+				} else {
+					f.SetValue(x, y, 1.0)
+				}
 			}
 		}
 	}

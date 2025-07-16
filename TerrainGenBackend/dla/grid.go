@@ -136,7 +136,7 @@ func (g Grid) ToFloatGrid(useEndDistance bool) FloatGrid {
 			if g.Tile(x, y).Occupied {
 				if useEndDistance {
 					if g.Tile(x, y).EndDist >= 0 {
-						f.SetValue(x, y, 1.0/(1.0+float64(g.Tile(x, y).EndDist)))
+						f.SetValue(x, y, 1.0-1.0/(1.0+float64(g.Tile(x, y).EndDist)))
 					} else {
 						f.SetValue(x, y, 0.0)
 					}

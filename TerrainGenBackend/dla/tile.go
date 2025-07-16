@@ -25,6 +25,7 @@ func NewTile(x int, y int) Tile {
 	t.Occupied = false
 	t.x = x
 	t.y = y
+	t.Parent = nil
 	t.Children = make([]*Tile, 0)
 	t.EndDist = -1
 	return t

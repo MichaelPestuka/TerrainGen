@@ -1,11 +1,10 @@
 package dla
 
 import (
-	"fmt"
 	"math/rand/v2"
 )
 
-func (g *Grid) RunCrystalGrowth(cycles int, branchChance float64, starts int) {
+func (g *Grid) RunCrystalGrowth(branchChance float64, starts int) {
 
 	growthQueue := make([]*Tile, 0)
 
@@ -94,9 +93,9 @@ func (g *Grid) CalculateEndDistance() {
 			}
 		}
 	}
-	for idx, origin := range origins {
+	for _, origin := range origins {
 		origin.RecursiveDistance()
-		fmt.Printf("Origin %d dist: %d\n", idx, origin.EndDist)
+		// fmt.Printf("Origin %d dist: %d\n", idx, origin.EndDist)
 	}
 }
 

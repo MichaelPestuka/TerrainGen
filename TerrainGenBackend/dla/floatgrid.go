@@ -2,8 +2,10 @@ package dla
 
 import (
 	"fmt"
+	"math"
+	"math/rand/v2"
 
-	"github.com/larspensjo/Go-simplex-noise/simplexnoise"
+	"github.com/ojrac/opensimplex-go"
 )
 
 type FloatGrid struct {
@@ -93,10 +95,49 @@ func (f FloatGrid) ExportHeights() []float64 {
 	return exp
 }
 
-func (f *FloatGrid) SimplexFill(octaves int) {
+func (f *FloatGrid) Normalize() {
+	max := math.Inf(-1)
+	min := math.Inf(1)
 	for x := range f.width {
 		for y := range f.height {
-			simplexnoise.Noise2(float64(x), float64(y))
+			min = math.Min(f.values[x][y], min)
+			max = math.Max(f.values[x][y], max)
 		}
+	}
+	max -= min
+	for x := range f.width {
+		for y := range f.height {
+			f.values[x][y] -= min
+			f.values[x][y] /= max
+		}
+	}
+}
+
+func (f *FloatGrid) CircleFilter(edgeOffset int, slope float64) {
+
+	for x := range f.width {
+		for y := range f.height {
+			squares := math.Pow(float64(x-f.width/2), 2) + math.Pow(float64(y-f.height/2), 2)
+			if squares <= math.Pow(float64(f.width/2-edgeOffset), 2) {
+
+				f.values[x][y] *= math.Exp(-(slope / (float64(f.width/2-edgeOffset) - math.Pow(squares, 0.5))))
+			} else {
+				f.values[x][y] *= 0.0
+			}
+		}
+	}
+}
+
+func (f *FloatGrid) SimplexFill(octaves int, frequency float64) {
+	noise := opensimplex.NewNormalized(rand.Int64())
+	amplitude := 1.0
+	for range octaves {
+		for x := range f.width {
+			for y := range f.height {
+				f.values[x][y] += amplitude * noise.Eval2(float64(x)*frequency/float64(f.width), float64(y)*frequency/float64(f.height))
+			}
+		}
+		frequency *= 2.0
+		amplitude /= 2.0
 	}
 }

@@ -2,6 +2,9 @@ package dla
 
 import (
 	"fmt"
+	"image"
+	"image/color"
+	"math"
 	"math/rand"
 )
 
@@ -33,6 +36,9 @@ func NewGrid(width int, height int, useRandom bool) Grid {
 }
 
 func (g Grid) Tile(x int, y int) *Tile {
+	if x < 0 || x >= g.width || y < 0 || y >= g.height {
+		return nil
+	}
 	return &(g.Tiles[x][y])
 }
 
@@ -47,7 +53,7 @@ func (g Grid) Occupation(x int, y int) bool {
 	return g.Tiles[x][y].Occupied
 }
 
-func (g Grid) PrintGrid() {
+func (g Grid) PrintDirections() {
 	for y := range g.width {
 		for x := range g.height {
 			if g.Tile(x, y).Occupied {
@@ -72,6 +78,23 @@ func (g Grid) PrintGrid() {
 		fmt.Printf("\n")
 	}
 	fmt.Printf("\n")
+}
+
+func (g Grid) Neighbors(t *Tile) []*Tile {
+	neighbors := make([]*Tile, 0)
+	if g.Tile(t.x+1, t.y) != nil {
+		neighbors = append(neighbors, g.Tile(t.x+1, t.y))
+	}
+	if g.Tile(t.x-1, t.y) != nil {
+		neighbors = append(neighbors, g.Tile(t.x-1, t.y))
+	}
+	if g.Tile(t.x, t.y+1) != nil {
+		neighbors = append(neighbors, g.Tile(t.x, t.y+1))
+	}
+	if g.Tile(t.x, t.y-1) != nil {
+		neighbors = append(neighbors, g.Tile(t.x, t.y-1))
+	}
+	return neighbors
 }
 
 func (g *Grid) UpscaleBy3() {
@@ -206,6 +229,128 @@ func (g *Grid) RunDLACycles(cycles int, max_steps int) {
 			}
 			x = dx
 			y = dy
+		}
+	}
+}
+
+func (g Grid) TerrainTypeTexture() image.Image {
+	img := image.NewRGBA(image.Rect(0, 0, g.width+1, g.height+1))
+	for y := range g.width {
+		for x := range g.height {
+			switch g.Tile(x, y).Type {
+			case Undefined:
+				img.Set(x, y, color.RGBA{R: 0, G: 0, B: 0, A: 255})
+			case Land:
+				img.Set(x, y, color.RGBA{R: 255, G: 0, B: 0, A: 255})
+			case Coast:
+				img.Set(x, y, color.RGBA{R: 255, G: 255, B: 0, A: 255})
+			case Ocean:
+				img.Set(x, y, color.RGBA{R: 0, G: 0, B: 255, A: 255})
+			case Lake:
+				img.Set(x, y, color.RGBA{R: 100, G: 100, B: 255, A: 255})
+			}
+		}
+	}
+	DrawDepressions(img, g.FindDepressions())
+	img.Set(0, 0, color.RGBA{255, 255, 255, 255})
+	img.Set(g.width, g.height, color.RGBA{255, 255, 255, 255})
+	return img
+}
+
+func (g *Grid) FindDepressions() []*Tile {
+	depressions := make([]*Tile, 0)
+	for x := range g.width {
+		for y := range g.height {
+			current := g.Tile(x, y)
+			neighbors := g.Neighbors(current)
+			isLower := true
+			for _, n := range neighbors {
+				if current.Height >= n.Height {
+					isLower = false
+				}
+			}
+			if isLower {
+				depressions = append(depressions, current)
+			}
+		}
+	}
+	return depressions
+}
+
+func (g *Grid) FillDepressions() {
+	closed := make([][]bool, g.width)
+	for x := range g.width {
+		closed[x] = make([]bool, g.height)
+	}
+
+	var queue TileQueue
+
+	// Push edges
+	for x := range g.width {
+		queue.Push(g.Tile(x, 0), g.Tile(x, 0).Height)
+		queue.Push(g.Tile(x, g.height-1), g.Tile(x, g.height-1).Height)
+		closed[x][0] = true
+		closed[x][g.height-1] = true
+	}
+	for y := range g.height {
+		queue.Push(g.Tile(0, y), g.Tile(0, y).Height)
+		queue.Push(g.Tile(g.width-1, y), g.Tile(g.width-1, y).Height)
+		closed[0][y] = true
+		closed[g.width-1][y] = true
+	}
+	i := 0
+	for len(queue.Tiles) > 0 {
+		i += 1
+		current := queue.PopLowest()
+		neighbors := g.Neighbors(current)
+		for _, n := range neighbors {
+			if closed[n.x][n.y] {
+				continue
+			}
+			n.Height = math.Max(current.Height+0.00001, n.Height)
+			closed[n.x][n.y] = true
+			queue.Push(n, n.Height)
+		}
+	}
+	fmt.Printf("Cycles: %d\n", i)
+
+}
+
+func DrawDepressions(img *image.RGBA, depressions []*Tile) {
+	for _, d := range depressions {
+		img.Set(d.x, d.y, color.RGBA{255, 0, 255, 255})
+	}
+}
+
+func (g *Grid) DrawOcean(oceanHeight float64) {
+	queue := make([]*Tile, 0)
+	queue = append(queue, g.Tile(0, 0))
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+
+		if current.Type != Undefined {
+			continue
+		}
+
+		if current.Height <= oceanHeight {
+			current.Type = Ocean
+		} else {
+			current.Type = Coast
+			continue
+		}
+
+		if g.Tile(current.x+1, current.y) != nil && g.Tile(current.x+1, current.y).Type == Undefined {
+			queue = append(queue, g.Tile(current.x+1, current.y))
+		}
+		if g.Tile(current.x-1, current.y) != nil && g.Tile(current.x-1, current.y).Type == Undefined {
+			queue = append(queue, g.Tile(current.x-1, current.y))
+		}
+		if g.Tile(current.x, current.y+1) != nil && g.Tile(current.x, current.y+1).Type == Undefined {
+			queue = append(queue, g.Tile(current.x, current.y+1))
+		}
+		if g.Tile(current.x, current.y-1) != nil && g.Tile(current.x, current.y-1).Type == Undefined {
+			queue = append(queue, g.Tile(current.x, current.y-1))
 		}
 	}
 }

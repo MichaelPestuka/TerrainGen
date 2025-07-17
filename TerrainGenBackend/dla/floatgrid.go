@@ -38,13 +38,13 @@ func (f FloatGrid) SetValue(x int, y int, value float64) {
 	f.values[x][y] = value
 }
 
-func (f FloatGrid) Print() {
-	for y := range f.height {
-		for x := range f.width {
-			if f.Value(x, y) < 0.01 {
+func (g Grid) PrintHeights() {
+	for y := range g.height {
+		for x := range g.width {
+			if g.Tile(x, y).Height < 0.01 {
 				fmt.Printf("  .  ")
 			} else {
-				fmt.Printf(" %.1f ", f.Value(x, y))
+				fmt.Printf(" %.1f ", g.Tile(x, y).Height)
 			}
 		}
 		fmt.Printf("\n")
@@ -85,56 +85,56 @@ func (f *FloatGrid) BoxBlur(kernelSize int, keepPeaks bool) {
 	*f = blurred
 }
 
-func (f FloatGrid) ExportHeights() []float64 {
-	exp := make([]float64, f.width*f.height)
-	for x := range f.width {
-		for y := range f.height {
-			exp[x+y*f.width] = f.Value(x, y)
+func (g Grid) ExportHeights() []float64 {
+	exp := make([]float64, g.width*g.height)
+	for x := range g.width {
+		for y := range g.height {
+			exp[x+y*g.width] = g.Tile(x, y).Height
 		}
 	}
 	return exp
 }
 
-func (f *FloatGrid) Normalize() {
+func (g *Grid) Normalize() {
 	max := math.Inf(-1)
 	min := math.Inf(1)
-	for x := range f.width {
-		for y := range f.height {
-			min = math.Min(f.values[x][y], min)
-			max = math.Max(f.values[x][y], max)
+	for x := range g.width {
+		for y := range g.height {
+			min = math.Min(g.Tile(x, y).Height, min)
+			max = math.Max(g.Tile(x, y).Height, max)
 		}
 	}
 	max -= min
-	for x := range f.width {
-		for y := range f.height {
-			f.values[x][y] -= min
-			f.values[x][y] /= max
+	for x := range g.width {
+		for y := range g.height {
+			g.Tile(x, y).Height -= min
+			g.Tile(x, y).Height /= max
 		}
 	}
 }
 
-func (f *FloatGrid) CircleFilter(edgeOffset int, slope float64) {
+func (g *Grid) CircleFilter(edgeOffset int, slope float64) {
 
-	for x := range f.width {
-		for y := range f.height {
-			squares := math.Pow(float64(x-f.width/2), 2) + math.Pow(float64(y-f.height/2), 2)
-			if squares <= math.Pow(float64(f.width/2-edgeOffset), 2) {
+	for x := range g.width {
+		for y := range g.height {
+			squares := math.Pow(float64(x-g.width/2), 2) + math.Pow(float64(y-g.height/2), 2)
+			if squares <= math.Pow(float64(g.width/2-edgeOffset), 2) {
 
-				f.values[x][y] *= math.Exp(-(slope / (float64(f.width/2-edgeOffset) - math.Pow(squares, 0.5))))
+				g.Tile(x, y).Height *= math.Exp(-(slope / (float64(g.width/2-edgeOffset) - math.Pow(squares, 0.5))))
 			} else {
-				f.values[x][y] *= 0.0
+				g.Tile(x, y).Height *= 0.0
 			}
 		}
 	}
 }
 
-func (f *FloatGrid) SimplexFill(octaves int, frequency float64) {
+func (g *Grid) SimplexFill(octaves int, frequency float64) {
 	noise := opensimplex.NewNormalized(rand.Int64())
 	amplitude := 1.0
 	for range octaves {
-		for x := range f.width {
-			for y := range f.height {
-				f.values[x][y] += amplitude * noise.Eval2(float64(x)*frequency/float64(f.width), float64(y)*frequency/float64(f.height))
+		for x := range g.width {
+			for y := range g.height {
+				g.Tile(x, y).Height += amplitude * noise.Eval2(float64(x)*frequency/float64(g.width), float64(y)*frequency/float64(g.height))
 			}
 		}
 		frequency *= 2.0

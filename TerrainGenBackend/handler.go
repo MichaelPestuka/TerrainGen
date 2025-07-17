@@ -4,9 +4,7 @@ import (
 	"TerrainGenBackend/dla"
 	"encoding/json"
 	"fmt"
-	"image"
-	"image/color"
-	"image/jpeg"
+	"image/png"
 	"io"
 	"net/http"
 	"os"
@@ -57,17 +55,15 @@ func GenerateTerrain(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	img := image.NewRGBA(image.Rect(0, 0, d.Width+1, d.Height+1))
-	for x := 0; x < d.Width; x++ {
-		for y := 0; y < d.Height; y++ {
+	// img := image.NewRGBA(image.Rect(0, 0, d.Width+1, d.Height+1))
+	// for x := 0; x < d.Width; x++ {
+	// 	for y := 0; y < d.Height; y++ {
 
-			img.SetRGBA(x, y, color.RGBA{R: 128, G: 128, B: 128, A: 255})
-			// img.SetRGBA(x, y, color.RGBA{R: uint8(rand.Int()), G: uint8(rand.Int()), B: uint8(rand.Int()), A: 255})
-		}
-	}
-	imgf, err := os.Create("textures/map.jpg")
-	jpeg.Encode(imgf, img, &jpeg.Options{Quality: 100})
-	g := dla.NewGrid(d.Width/9, d.Height/9, false)
+	// 		img.SetRGBA(x, y, color.RGBA{R: 128, G: 128, B: 128, A: 255})
+	// 		// img.SetRGBA(x, y, color.RGBA{R: uint8(rand.Int()), G: uint8(rand.Int()), B: uint8(rand.Int()), A: 255})
+	// 	}
+	// }
+	g := dla.NewGrid(d.Width, d.Height, false)
 	// g.RunDLACycles(25, 50)
 	// g.PrintGrid()
 	// g.UpscaleBy3()
@@ -80,16 +76,22 @@ func GenerateTerrain(w http.ResponseWriter, r *http.Request) {
 	// g.PrintGrid()
 	// g.RunDLACycles(1000, 1000)
 	// g.PrintGrid()
-	f := g.ToFloatGrid(true)
+	// f := g.ToFloatGrid(true)
 	// f.BoxBlur(5, true)
 	// f.BoxBlur(3, true)
 	// f.BoxBlur(1, true)
 	// f.BoxBlur(1, true)
 	// f.BoxBlur(1, true)
-	f = dla.NewFloatGrid(d.Width, d.Height)
-	f.SimplexFill(5, 7.0)
-	f.CircleFilter(10, 10.0)
-	f.Normalize()
+	// f = dla.NewFloatGrid(d.Width, d.Height)
+	g.SimplexFill(5, 7.0)
+	g.CircleFilter(10, 10.0)
+	g.Normalize()
+	g.DrawOcean(0.45)
+	g.FillDepressions()
+	img := g.TerrainTypeTexture()
+	imgf, err := os.Create("textures/map.png")
+	png.Encode(imgf, img)
+	// jpeg.Encode(imgf, img, &jpeg.Options{Quality: 100})
 	// f.BoxBlur(1, false)
 	// f.BoxBlur(1, false)
 	// f.BoxBlur(1, false)
@@ -103,8 +105,8 @@ func GenerateTerrain(w http.ResponseWriter, r *http.Request) {
 	var reply replyData
 	reply.Width = d.Width
 	reply.Height = d.Height
-	reply.Heights = f.ExportHeights()
-	reply.TextureURL = "http://localhost:8080/tex/map.jpg"
+	reply.Heights = g.ExportHeights()
+	reply.TextureURL = "http://localhost:8080/tex/map.png"
 
 	j, _ := json.Marshal(reply)
 

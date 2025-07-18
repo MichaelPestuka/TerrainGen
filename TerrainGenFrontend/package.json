@@ -10,7 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@mjackson/multipart-parser": "^0.10.1",
+    "@mui/material": "^7.2.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "simplex-noise": "^4.0.3",

@@ -6,13 +6,12 @@ export default function InputSlider({ label, updateData, minValue, maxValue, def
 
   const handleSliderChange = (event, newValue) => {
     setValue(newValue);
-    updateData(value);
-
+    updateData(newValue);
   };
 
   const handleInputChange = (event) => {
     setValue(event.target.value === '' ? minValue : Number(event.target.value));
-    updateData(value);
+    updateData(event.target.value);
   };
 
   const handleBlur = () => {

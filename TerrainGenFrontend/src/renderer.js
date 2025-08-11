@@ -1,45 +1,8 @@
 import * as THREE from 'three';
 import { degToRad } from 'three/src/math/MathUtils.js';
+import TerrainShader from './terrainshader';
 
 // const terrain_scale = 0.02;
-
-const _VS = `
-varying float v_Pos;
-varying vec2 texCoord;
-uniform float width;
-uniform float height; 
-void main() {
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, position.y * 5.0, position.z, 1.0);
-    v_Pos = (position.y + 1.0) / 2.0;
-    // texCoord = vec2(position.x / float(width) + 0.5, position.z / float(height) + 0.5);
-    texCoord = uv;
-}
-`;
-
-const _FS = `
-uniform sampler2D texture1;
-uniform float min_y;
-uniform float max_y;
-varying float v_Pos;
-varying vec2 texCoord;
-
-void main() {
-    // float relative_height = (v_Pos.y - min_y) / (max_y);
-    float relative_height = v_Pos;
-    gl_FragColor = vec4(relative_height , relative_height, relative_height, 1.0);
-    if(relative_height < 0.5 && relative_height >= 0.0)
-    {
-        gl_FragColor = vec4(0.2, 0.2, 0.5, 1.0);
-    }
-    if(texture(texture1, texCoord).r < 0.1 || texture(texture1, texCoord).b > 0.1 ) {
-    
-        gl_FragColor = vec4(relative_height, relative_height, relative_height, 1.0);
-    }
-    else {
-        gl_FragColor = vec4(texture(texture1, texCoord).rgb, 1.0);
-    }
-}
-`;
 
 function getIndices(width, height)
 {
@@ -64,14 +27,12 @@ function getIndices(width, height)
 
 export default class TerrainRenderer {
 
-    constructor(width, height) {
-        this.fetchTerrain(width, height);
+    constructor(worldData) {
+        this.fetchTerrain(worldData);
     }
 
-    fetchTerrain(width, height)
+    fetchTerrain(worldData)
     {
-        console.log("getting");
-        console.log(width, height);
         let new_req = new XMLHttpRequest();
         new_req.addEventListener("load", () => {
             var parsed = JSON.parse(new_req.responseText)
@@ -81,7 +42,7 @@ export default class TerrainRenderer {
         new_req.open("QUERY", "http://localhost:8080", true);
         // new_req.setRequestHeader("Access-Control-Allow-Methods", "*");
         new_req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        new_req.send(JSON.stringify({"width": width, "height": height}));
+        new_req.send(JSON.stringify(worldData));
     }
 
     startRenderer(premadeValues, width, height, textureURL)
@@ -125,22 +86,27 @@ export default class TerrainRenderer {
         // Load Texture from server
         var textureLoader = new THREE.TextureLoader();
         textureLoader.crossOrigin = "anonymous";
-        var texture = textureLoader.load(textureURL);
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.minFilter = THREE.NearestFilter;
-        texture.magFilter = THREE.NearestFilter;
-        texture.flipY = false;
+        var terrainTexture = textureLoader.load(textureURL);
+        terrainTexture.wrapS = THREE.RepeatWrapping;
+        terrainTexture.wrapT = THREE.RepeatWrapping;
+        terrainTexture.minFilter = THREE.NearestFilter;
+        terrainTexture.magFilter = THREE.NearestFilter;
+        terrainTexture.flipY = false;
 
-        // Create material from texture
-        const material = new THREE.ShaderMaterial({
-            uniforms: {max_y : {value: max_y}, min_y : {value: min_y}, width : {value : width}, height : {value : height}, texture1 : {value : texture}},
-            vertexShader: _VS,
-            fragmentShader: _FS,
-        });
+        // Load perlin noise texture
+
+        var perlinTexture = textureLoader.load('public/PerlinNoise.png');
+        perlinTexture.wrapS = THREE.RepeatWrapping
+        perlinTexture.wrapT = THREE.RepeatWrapping
+
+
+        // Create material
+        const terrainShader = new TerrainShader(min_y, max_y, width, height);
+        terrainShader.SetTexture("terrainTexture", terrainTexture);
+        terrainShader.SetTexture("perlinTexture", perlinTexture);
 
         // Create mesh from geometry and add to scene
-        const terrain = new THREE.Mesh(terrain_geometry, material);
+        const terrain = new THREE.Mesh(terrain_geometry, terrainShader.material);
         terrain.geometry.center()
         let ratio = width / height
         terrain.geometry.scale(50 * ratio, 1, 50 / ratio);
@@ -152,7 +118,9 @@ export default class TerrainRenderer {
         camera.rotateX(degToRad(-45));
 
 
-        function animate() {
+        function animate(timestamp) {
+            terrainShader.SetValue("time", timestamp)
+            // console.log(timestamp)
             terrain.rotation.y += 0.005;
             renderer.setSize(window.innerWidth, window.innerHeight);
             camera.aspect = window.innerWidth / window.innerHeight;

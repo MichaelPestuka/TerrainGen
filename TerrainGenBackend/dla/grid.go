@@ -97,6 +97,51 @@ func (g Grid) Neighbors(t *Tile) []*Tile {
 	return neighbors
 }
 
+func (g Grid) DiagonalNeighbors(t *Tile) []*Tile { // idk just includes diagonals
+	neighbors := make([]*Tile, 0)
+	if g.Tile(t.x+1, t.y+1) != nil {
+		neighbors = append(neighbors, g.Tile(t.x+1, t.y+1))
+	}
+	if g.Tile(t.x-1, t.y+1) != nil {
+		neighbors = append(neighbors, g.Tile(t.x-1, t.y+1))
+	}
+	if g.Tile(t.x+1, t.y-1) != nil {
+		neighbors = append(neighbors, g.Tile(t.x+1, t.y-1))
+	}
+	if g.Tile(t.x-1, t.y-1) != nil {
+		neighbors = append(neighbors, g.Tile(t.x-1, t.y-1))
+	}
+	return neighbors
+}
+func (g Grid) MooreNeighbors(t *Tile) []*Tile { // idk just includes diagonals
+	neighbors := make([]*Tile, 0)
+	if g.Tile(t.x+1, t.y) != nil {
+		neighbors = append(neighbors, g.Tile(t.x+1, t.y))
+	}
+	if g.Tile(t.x-1, t.y) != nil {
+		neighbors = append(neighbors, g.Tile(t.x-1, t.y))
+	}
+	if g.Tile(t.x, t.y+1) != nil {
+		neighbors = append(neighbors, g.Tile(t.x, t.y+1))
+	}
+	if g.Tile(t.x, t.y-1) != nil {
+		neighbors = append(neighbors, g.Tile(t.x, t.y-1))
+	}
+	if g.Tile(t.x+1, t.y+1) != nil {
+		neighbors = append(neighbors, g.Tile(t.x+1, t.y+1))
+	}
+	if g.Tile(t.x-1, t.y+1) != nil {
+		neighbors = append(neighbors, g.Tile(t.x-1, t.y+1))
+	}
+	if g.Tile(t.x+1, t.y-1) != nil {
+		neighbors = append(neighbors, g.Tile(t.x+1, t.y-1))
+	}
+	if g.Tile(t.x-1, t.y-1) != nil {
+		neighbors = append(neighbors, g.Tile(t.x-1, t.y-1))
+	}
+	return neighbors
+}
+
 func (g *Grid) UpscaleBy3() {
 
 	upscaled := NewGrid(g.width*3, g.height*3, false)
@@ -234,9 +279,9 @@ func (g *Grid) RunDLACycles(cycles int, max_steps int) {
 }
 
 func (g Grid) TerrainTypeTexture() image.Image {
-	img := image.NewRGBA(image.Rect(0, 0, g.width+1, g.height+1))
-	for y := range g.width {
-		for x := range g.height {
+	img := image.NewRGBA(image.Rect(0, 0, g.width, g.height))
+	for x := range g.width {
+		for y := range g.height {
 			switch g.Tile(x, y).Type {
 			case Undefined:
 				img.Set(x, y, color.RGBA{R: 0, G: 0, B: 0, A: 255})
@@ -246,14 +291,17 @@ func (g Grid) TerrainTypeTexture() image.Image {
 				img.Set(x, y, color.RGBA{R: 255, G: 255, B: 0, A: 255})
 			case Ocean:
 				img.Set(x, y, color.RGBA{R: 0, G: 0, B: 255, A: 255})
+				// img.Set(x, y, color.RGBA{R: 0, G: 0, B: uint8(128.0 + g.Tile(x, y).Height*128.0), A: 255})
 			case Lake:
 				img.Set(x, y, color.RGBA{R: 100, G: 100, B: 255, A: 255})
+			case Shallows:
+				img.Set(x, y, color.RGBA{R: 0, G: 255, B: 255, A: 255})
 			}
 		}
 	}
-	DrawDepressions(img, g.FindDepressions())
+	// DrawDepressions(img, g.FindDepressions())
 	img.Set(0, 0, color.RGBA{255, 255, 255, 255})
-	img.Set(g.width, g.height, color.RGBA{255, 255, 255, 255})
+	img.Set(g.width-1, g.height-1, color.RGBA{255, 255, 255, 255})
 	return img
 }
 
@@ -307,12 +355,14 @@ func (g *Grid) FillDepressions() {
 			if closed[n.x][n.y] {
 				continue
 			}
-			n.Height = math.Max(current.Height+0.00001, n.Height)
+			if current.Height >= 0.5 {
+				n.Height = math.Max(current.Height+0.002, n.Height)
+			}
 			closed[n.x][n.y] = true
 			queue.Push(n, n.Height)
 		}
 	}
-	fmt.Printf("Cycles: %d\n", i)
+	// fmt.Printf("Cycles: %d\n", i)
 
 }
 
@@ -325,6 +375,7 @@ func DrawDepressions(img *image.RGBA, depressions []*Tile) {
 func (g *Grid) DrawOcean(oceanHeight float64) {
 	queue := make([]*Tile, 0)
 	queue = append(queue, g.Tile(0, 0))
+	queue = append(queue, g.Tile(g.width-1, g.height-1))
 	for len(queue) > 0 {
 		current := queue[0]
 		queue = queue[1:]
@@ -335,6 +386,7 @@ func (g *Grid) DrawOcean(oceanHeight float64) {
 
 		if current.Height <= oceanHeight {
 			current.Type = Ocean
+			// current.Height = oceanHeight // Flatten ocean
 		} else {
 			current.Type = Coast
 			continue
@@ -352,5 +404,64 @@ func (g *Grid) DrawOcean(oceanHeight float64) {
 		if g.Tile(current.x, current.y-1) != nil && g.Tile(current.x, current.y-1).Type == Undefined {
 			queue = append(queue, g.Tile(current.x, current.y-1))
 		}
+	}
+}
+
+func (g *Grid) FindShallows(shallowsLength int) {
+	for range shallowsLength {
+		newGrid := NewGrid(g.width, g.height, false)
+		for y := range g.height {
+			copy(newGrid.Tiles[y], g.Tiles[y])
+		}
+		for x := range g.width {
+			for y := range g.height {
+				if g.Tile(x, y).Type == Ocean {
+					for _, n := range g.Neighbors(g.Tile(x, y)) {
+						if n.Type == Coast || n.Type == Shallows {
+							newGrid.Tile(x, y).Type = Shallows
+							break
+						}
+					}
+				}
+			}
+		}
+		g.Tiles = newGrid.Tiles
+	}
+}
+
+func (g *Grid) OceanSloping(step float64) {
+	closed := make([][]bool, g.width)
+	for x := range g.width {
+		closed[x] = make([]bool, g.height)
+	}
+	open := make([]*Tile, 0)
+	for x := range g.width {
+		for y := range g.height {
+			if g.Tile(x, y).Type == Coast {
+				open = append(open, g.Tile(x, y))
+				g.Tile(x, y).ShoreDistance = 0
+			}
+		}
+	}
+	for len(open) > 0 {
+		closed[open[0].x][open[0].y] = true
+		for _, n := range g.Neighbors(open[0]) {
+			if !closed[n.x][n.y] {
+				n.ShoreDistance = math.Min(n.ShoreDistance, open[0].ShoreDistance+1)
+				closed[n.x][n.y] = true
+				open = append(open, n)
+			}
+		}
+		for _, n := range g.DiagonalNeighbors(open[0]) {
+			if !closed[n.x][n.y] {
+				n.ShoreDistance = math.Min(n.ShoreDistance, open[0].ShoreDistance+1.414)
+				closed[n.x][n.y] = true
+				open = append(open, n)
+			}
+		}
+		if open[0].Type == Ocean {
+			open[0].Height = 10 / (20 + open[0].ShoreDistance) // maxNeighbor
+		}
+		open = open[1:]
 	}
 }

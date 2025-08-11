@@ -6,9 +6,17 @@ import (
 	"fmt"
 	"image/png"
 	"io"
+	"math/rand/v2"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 )
+
+func DeleteTexture(filename string, delay int) {
+	time.Sleep(time.Duration(delay) * time.Second)
+	os.Remove(filename)
+}
 
 func AllowCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
@@ -31,8 +39,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 type jsonData struct {
-	Width  int
-	Height int
+	Width    int
+	Height   int
+	Sealevel float64
 }
 
 type replyData struct {
@@ -55,62 +64,33 @@ func GenerateTerrain(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	// img := image.NewRGBA(image.Rect(0, 0, d.Width+1, d.Height+1))
-	// for x := 0; x < d.Width; x++ {
-	// 	for y := 0; y < d.Height; y++ {
-
-	// 		img.SetRGBA(x, y, color.RGBA{R: 128, G: 128, B: 128, A: 255})
-	// 		// img.SetRGBA(x, y, color.RGBA{R: uint8(rand.Int()), G: uint8(rand.Int()), B: uint8(rand.Int()), A: 255})
-	// 	}
-	// }
+	// Generate heightmap
 	g := dla.NewGrid(d.Width, d.Height, false)
-	// g.RunDLACycles(25, 50)
-	// g.PrintGrid()
-	// g.UpscaleBy3()
-	// g.RunDLACycles(200, 1000)
-	// g.PrintGrid()
-	// g.UpscaleBy3()
-	// g.RunCrystalGrowth(0.9, 1)
-	// g.PrintGrid()
-	// g.CalculateEndDistance()
-	// g.PrintGrid()
-	// g.RunDLACycles(1000, 1000)
-	// g.PrintGrid()
-	// f := g.ToFloatGrid(true)
-	// f.BoxBlur(5, true)
-	// f.BoxBlur(3, true)
-	// f.BoxBlur(1, true)
-	// f.BoxBlur(1, true)
-	// f.BoxBlur(1, true)
-	// f = dla.NewFloatGrid(d.Width, d.Height)
 	g.SimplexFill(5, 7.0)
-	g.CircleFilter(10, 10.0)
+	g.CircleFilter(0.05, 10.0)
 	g.Normalize()
-	g.DrawOcean(0.45)
+	g.DrawOcean(d.Sealevel)
+	// g.FindShallows(3)
 	g.FillDepressions()
+	g.OceanSloping(0.005)
+
+	// Generate texture
 	img := g.TerrainTypeTexture()
-	imgf, err := os.Create("textures/map.png")
+	imageTag := rand.Int() % 10000000
+	imageFileName := "map" + strconv.Itoa(imageTag) + ".png"
+	imgf, err := os.Create("textures/" + imageFileName)
+	go DeleteTexture("textures/"+imageFileName, 15) // Delete texture after some time
 	png.Encode(imgf, img)
-	// jpeg.Encode(imgf, img, &jpeg.Options{Quality: 100})
-	// f.BoxBlur(1, false)
-	// f.BoxBlur(1, false)
-	// f.BoxBlur(1, false)
-	// f.BoxBlur(1, false)
-	// f.BoxBlur(1, true)
-	// f.BoxBlur(3, true)
-	// f.BoxBlur(1, true)
-	// f.BoxBlur(1, true)
-	// f.BoxBlur(1, true)
-	// f.BoxBlur(1, true)
+
+	// Send reply
 	var reply replyData
 	reply.Width = d.Width
 	reply.Height = d.Height
 	reply.Heights = g.ExportHeights()
-	reply.TextureURL = "http://localhost:8080/tex/map.png"
+	reply.TextureURL = "http://localhost:8080/tex/" + imageFileName
 
 	j, _ := json.Marshal(reply)
 
 	w.Header().Set("Content-Type", "text/plain")
-	// w.Header().Set("Content-Type", "m")
 	fmt.Fprintf(w, "%s", j)
 }

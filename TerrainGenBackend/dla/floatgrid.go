@@ -113,14 +113,19 @@ func (g *Grid) Normalize() {
 	}
 }
 
-func (g *Grid) CircleFilter(edgeOffset int, slope float64) {
+func (g *Grid) CircleFilter(edgeOffsetPercent float64, slope float64) {
 
+	smaller := g.width
+	if g.width > g.height {
+		smaller = g.height
+	}
+	edgeOffset := int(smaller * int(edgeOffsetPercent))
 	for x := range g.width {
 		for y := range g.height {
 			squares := math.Pow(float64(x-g.width/2), 2) + math.Pow(float64(y-g.height/2), 2)
 			if squares <= math.Pow(float64(g.width/2-edgeOffset), 2) {
 
-				g.Tile(x, y).Height *= math.Exp(-(slope / (float64(g.width/2-edgeOffset) - math.Pow(squares, 0.5))))
+				g.Tile(x, y).Height *= math.Exp(-(slope / (float64(smaller/2-edgeOffset) - math.Pow(squares, 0.5))))
 			} else {
 				g.Tile(x, y).Height *= 0.0
 			}

@@ -1,5 +1,7 @@
 package dla
 
+import "math"
+
 type Direction int
 
 const (
@@ -18,19 +20,21 @@ const (
 	Coast
 	Lake
 	Land
+	Shallows
 )
 
 type Tile struct {
-	Parent   *Tile
-	Children []*Tile
-	Occupied bool
-	x        int
-	y        int
-	Dir      Direction
-	EndDist  int
-	Height   float64
-	Type     TerrainType
-	Water    float64
+	Parent        *Tile
+	Children      []*Tile
+	Occupied      bool
+	x             int
+	y             int
+	Dir           Direction
+	EndDist       int
+	Height        float64
+	Type          TerrainType
+	Water         float64
+	ShoreDistance float64
 }
 
 func NewTile(x int, y int) Tile {
@@ -43,6 +47,7 @@ func NewTile(x int, y int) Tile {
 	t.EndDist = -1
 	t.Height = 0.0
 	t.Water = 0.0
+	t.ShoreDistance = math.Inf(1)
 	return t
 }
 

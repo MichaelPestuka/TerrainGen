@@ -99,11 +99,28 @@ export default class TerrainRenderer {
         perlinTexture.wrapS = THREE.RepeatWrapping
         perlinTexture.wrapT = THREE.RepeatWrapping
 
+        var forestTexture = textureLoader.load('public/forest.jpg');
+        forestTexture.wrapS = THREE.MirroredRepeatWrapping
+        forestTexture.wrapT = THREE.MirroredRepeatWrapping
 
+        var sandTexture = textureLoader.load('public/sand.jpg');
+        sandTexture.wrapS = THREE.MirroredRepeatWrapping
+        sandTexture.wrapT = THREE.MirroredRepeatWrapping
+
+        var rockTexture = textureLoader.load('public/rock.jpg');
+        rockTexture.wrapS = THREE.MirroredRepeatWrapping
+        rockTexture.wrapT = THREE.MirroredRepeatWrapping
+
+        var snowTexture = textureLoader.load('public/snow.jpg');
+        snowTexture.wrapS = THREE.MirroredRepeatWrapping
+        snowTexture.wrapT = THREE.MirroredRepeatWrapping
         // Create material
         const terrainShader = new TerrainShader(min_y, max_y, width, height);
         terrainShader.SetTexture("terrainTexture", terrainTexture);
         terrainShader.SetTexture("perlinTexture", perlinTexture);
+        terrainShader.SetTexture("forestTexture", forestTexture);
+        terrainShader.SetTerrainTresholds([0.5, 0.6, 0.7, 0.8, 0.9])
+        terrainShader.SetTerrainTextures([ sandTexture, forestTexture, rockTexture, snowTexture, snowTexture])
 
         // Create mesh from geometry and add to scene
         const terrain = new THREE.Mesh(terrain_geometry, terrainShader.material);
@@ -121,7 +138,7 @@ export default class TerrainRenderer {
         function animate(timestamp) {
             terrainShader.SetValue("time", timestamp)
             // console.log(timestamp)
-            terrain.rotation.y += 0.005;
+            // terrain.rotation.y += 0.005;
             renderer.setSize(window.innerWidth, window.innerHeight);
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();

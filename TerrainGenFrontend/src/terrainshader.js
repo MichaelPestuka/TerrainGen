@@ -15,41 +15,60 @@ void main() {
 
 const _FS = `
 uniform sampler2D terrainTexture;
+uniform sampler2D forestTexture;
 uniform sampler2D perlinTexture;
-uniform float min_y;
-uniform float max_y;
+
+uniform sampler2D[5] landTextures;
+uniform float[5] landHeights;
+
 varying float v_Pos;
 varying vec2 texCoord;
 
 uniform float time;
 
 void main() {
-    // float relative_height = (v_Pos.y - min_y) / (max_y);
-    float relative_height = v_Pos;
-    gl_FragColor = vec4(relative_height , relative_height, relative_height, 1.0);
-    if(relative_height < 0.5 && relative_height >= 0.0)
-    {
-        gl_FragColor = vec4(0.2, 0.2, 0.5, 1.0);
-    }
-    if(texture(terrainTexture, texCoord).b < 0.1 ) {
-    
-        gl_FragColor = vec4(relative_height, relative_height, relative_height, 1.0);
-    }
-    else {
-        gl_FragColor = vec4(texture(terrainTexture, texCoord).rgb, 1.0);
-        if(gl_FragColor.b >= 0.9 && gl_FragColor.g >= 0.9) {
-            float foamHeight = (sin(time / 500.0) + 1.0)/5.0;
-            gl_FragColor = texture(perlinTexture, vec2(texCoord.x * 5.0 + sin(time / 10000.0), texCoord.y * 5.0 + sin(time / 10000.0))).r < foamHeight ? vec4(0, 1.0, 1.0, 1.0) : vec4(0.0, 0.0, 1.0, 1.0);
-        }
-        // gl_FragColor = vec4(relative_height, relative_height, relative_height, 1.0);
-    }
-    float border = ((sin(time / 1000.0) + 1.0) / 64.0) + 0.45; //0.46875;
+    float border = ((sin(time / 1000.0) + 1.0) / 128.0) + 0.46; //0.46875;
     border -= floor(border);
-    
-    if(relative_height < border && relative_height > border - 0.02) {
-        gl_FragColor = vec4(0.0, 0.5, 1.0, relative_height);
+    if(v_Pos <= border - 0.01) // Below waves
+    {
+
+        gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
     }
-    // gl_FragColor = vec4(relative_height, relative_height, relative_height, 1.0);
+    else if(v_Pos <= border && v_Pos > border - 0.01) { // Foam layer
+        gl_FragColor = vec4(0.0, 0.5, 1.0, v_Pos);
+    }
+    else { // land
+        if(v_Pos < landHeights[0]) {
+            gl_FragColor = vec4(texture(landTextures[0], texCoord * 20.0).rgb, 1.0);
+        }
+        else if (v_Pos < landHeights[1]) {
+        
+            gl_FragColor = vec4(texture(landTextures[1], texCoord * 20.0).rgb, 1.0);
+        }
+        else if (v_Pos < landHeights[2]) {
+        
+            gl_FragColor = vec4(texture(landTextures[2], texCoord * 20.0).rgb, 1.0);
+        }
+        else if (v_Pos < landHeights[3]) {
+        
+            gl_FragColor = vec4(texture(landTextures[3], texCoord * 20.0).rgb, 1.0);
+        }
+        else if (v_Pos < landHeights[4]) {
+        
+            gl_FragColor = vec4(texture(landTextures[4], texCoord * 20.0).rgb, 1.0);
+        }
+        else {
+        
+            gl_FragColor = vec4(texture(landTextures[4], texCoord * 20.0).rgb, 1.0);
+        }
+        // if(texture(perlinTexture, texCoord * 20.0).r > 0.5) {
+        //     gl_FragColor = vec4(v_Pos, v_Pos, v_Pos, 1.0);
+        // }
+        // else {
+        //     gl_FragColor = vec4(texture(forestTexture, texCoord * 20.0).rgb, 1.0);
+        // }
+    }
+    // gl_FragColor = vec4(v_Pos, v_Pos, v_Pos, 1.0);
 }
 `;
 
@@ -70,4 +89,10 @@ export default class TerrainShader {
         this.material.uniforms[name] = {value : value}
     }
 
+    SetTerrainTresholds(tresholds) {
+        this.material.uniforms["landHeights"] = {value : tresholds}
+    }
+    SetTerrainTextures(textures) {
+        this.material.uniforms["landTextures"] = {value : textures}
+    }
 }

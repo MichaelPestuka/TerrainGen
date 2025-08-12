@@ -26,7 +26,13 @@ varying vec2 texCoord;
 
 uniform float time;
 
+float inverseLerp(float a, float b, float value) {
+    return clamp((value - a)/(b-a), 0.0, 1.0);
+}
+
+
 void main() {
+
     float border = ((sin(time / 1000.0) + 1.0) / 128.0) + 0.46; //0.46875;
     border -= floor(border);
     if(v_Pos <= border - 0.01) // Below waves
@@ -38,29 +44,50 @@ void main() {
         gl_FragColor = vec4(0.0, 0.5, 1.0, v_Pos);
     }
     else { // land
+
+        for(int i = 0; i < 5; i++) {
+            float drawStrength = inverseLerp(-0.005, 0.005, v_Pos - landHeights[i]);
+            switch (i) { // A loathsome workaround, smapler2D arrays have to be indexed with constant expressions
+                case 0:
+                    gl_FragColor = gl_FragColor * (1.0-drawStrength) + texture(landTextures[0], texCoord * 20.0).rgba * drawStrength;
+                    break;
+                case 1:
+                    gl_FragColor = gl_FragColor * (1.0-drawStrength) + texture(landTextures[1], texCoord * 20.0).rgba * drawStrength;
+                    break;
+                case 2:
+                    gl_FragColor = gl_FragColor * (1.0-drawStrength) + texture(landTextures[2], texCoord * 20.0).rgba * drawStrength;
+                    break;
+                case 3:
+                    gl_FragColor = gl_FragColor * (1.0-drawStrength) + texture(landTextures[3], texCoord * 20.0).rgba * drawStrength;
+                    break;
+                case 4:
+                    gl_FragColor = gl_FragColor * (1.0-drawStrength) + texture(landTextures[4], texCoord * 20.0).rgba * drawStrength;
+                    break;
+            }
+        }
         if(v_Pos < landHeights[0]) {
             gl_FragColor = vec4(texture(landTextures[0], texCoord * 20.0).rgb, 1.0);
         }
-        else if (v_Pos < landHeights[1]) {
+        // else if (v_Pos < landHeights[1]) {
         
-            gl_FragColor = vec4(texture(landTextures[1], texCoord * 20.0).rgb, 1.0);
-        }
-        else if (v_Pos < landHeights[2]) {
+        //     gl_FragColor = vec4(texture(landTextures[1], texCoord * 20.0).rgb, 1.0);
+        // }
+        // else if (v_Pos < landHeights[2]) {
         
-            gl_FragColor = vec4(texture(landTextures[2], texCoord * 20.0).rgb, 1.0);
-        }
-        else if (v_Pos < landHeights[3]) {
+        //     gl_FragColor = vec4(texture(landTextures[2], texCoord * 20.0).rgb, 1.0);
+        // }
+        // else if (v_Pos < landHeights[3]) {
         
-            gl_FragColor = vec4(texture(landTextures[3], texCoord * 20.0).rgb, 1.0);
-        }
-        else if (v_Pos < landHeights[4]) {
+        //     gl_FragColor = vec4(texture(landTextures[3], texCoord * 20.0).rgb, 1.0);
+        // }
+        // else if (v_Pos < landHeights[4]) {
         
-            gl_FragColor = vec4(texture(landTextures[4], texCoord * 20.0).rgb, 1.0);
-        }
-        else {
+        //     gl_FragColor = vec4(texture(landTextures[4], texCoord * 20.0).rgb, 1.0);
+        // }
+        // else {
         
-            gl_FragColor = vec4(texture(landTextures[4], texCoord * 20.0).rgb, 1.0);
-        }
+        //     gl_FragColor = vec4(texture(landTextures[4], texCoord * 20.0).rgb, 1.0);
+        // }
         // if(texture(perlinTexture, texCoord * 20.0).r > 0.5) {
         //     gl_FragColor = vec4(v_Pos, v_Pos, v_Pos, 1.0);
         // }

@@ -103,7 +103,7 @@ export default class TerrainRenderer {
         forestTexture.wrapS = THREE.MirroredRepeatWrapping
         forestTexture.wrapT = THREE.MirroredRepeatWrapping
 
-        var sandTexture = textureLoader.load('public/sand.jpg');
+        var sandTexture = textureLoader.load('public/sand.png');
         sandTexture.wrapS = THREE.MirroredRepeatWrapping
         sandTexture.wrapT = THREE.MirroredRepeatWrapping
 
@@ -119,7 +119,7 @@ export default class TerrainRenderer {
         terrainShader.SetTexture("terrainTexture", terrainTexture);
         terrainShader.SetTexture("perlinTexture", perlinTexture);
         terrainShader.SetTexture("forestTexture", forestTexture);
-        terrainShader.SetTerrainTresholds([0.5, 0.6, 0.7, 0.8, 0.9])
+        terrainShader.SetTerrainTresholds([0.4, 0.5, 0.6, 0.7, 0.9])
         terrainShader.SetTerrainTextures([ sandTexture, forestTexture, rockTexture, snowTexture, snowTexture])
 
         // Create mesh from geometry and add to scene

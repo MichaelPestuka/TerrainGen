@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { degToRad } from 'three/src/math/MathUtils.js';
 import TerrainShader from './terrainshader';
-
+import { FlyControls } from 'three/addons/controls/FlyControls.js';
 // const terrain_scale = 0.02;
 
 function getIndices(width, height)
@@ -99,7 +99,7 @@ export default class TerrainRenderer {
         perlinTexture.wrapS = THREE.RepeatWrapping
         perlinTexture.wrapT = THREE.RepeatWrapping
 
-        var forestTexture = textureLoader.load('public/forest.jpg');
+        var forestTexture = textureLoader.load('public/forest.png');
         forestTexture.wrapS = THREE.MirroredRepeatWrapping
         forestTexture.wrapT = THREE.MirroredRepeatWrapping
 
@@ -134,9 +134,12 @@ export default class TerrainRenderer {
         camera.position.y += 30;
         camera.rotateX(degToRad(-45));
 
-
+        var controls = new FlyControls(camera, canvas)
+        controls.movementSpeed = 50
+        controls.dragToLook = true
         function animate(timestamp) {
             terrainShader.SetValue("time", timestamp)
+            controls.update(0.01)
             // console.log(timestamp)
             // terrain.rotation.y += 0.005;
             renderer.setSize(window.innerWidth, window.innerHeight);

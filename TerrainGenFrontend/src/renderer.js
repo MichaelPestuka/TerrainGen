@@ -31,6 +31,7 @@ export default class TerrainRenderer {
         this.startRenderer.bind(this);
         this.prepareRenderer();
         this.fetchTerrain(worldData);
+        this.startRenderer();
         this.cliffMultiplier = 6.0;
     }
 
@@ -44,7 +45,7 @@ export default class TerrainRenderer {
         new_req.addEventListener("load", () => {
             var parsed = JSON.parse(new_req.responseText)
             console.log(parsed)
-            this.startRenderer(parsed.Heights, parsed.Width, parsed.Height, parsed.TextureURL)
+            this.loadWorld(parsed.Heights, parsed.Width, parsed.Height, parsed.TextureURL)
         });
         new_req.open("QUERY", "http://localhost:8080", true);
         // new_req.setRequestHeader("Access-Control-Allow-Methods", "*");
@@ -96,9 +97,7 @@ export default class TerrainRenderer {
         this.terrainShader.SetValue("cliffMultiplier", 6.0);
     }
 
-    startRenderer(premadeValues, width, height, textureURL)
-    {
-
+    loadWorld(premadeValues, width, height, textureURL) {
 
         var positions, min_y, max_y
         var new_positions = [];
@@ -131,14 +130,16 @@ export default class TerrainRenderer {
         this.terrain_geometry.setIndex(getIndices(width, height));
         this.terrain_geometry.computeVertexNormals();
 
-
-
+        this.ratio = width / height
         // Create mesh from geometry and add to scene
         const terrain = new THREE.Mesh(this.terrain_geometry, this.terrainShader.material);
         terrain.geometry.center()
-        let ratio = width / height
-        terrain.geometry.scale(50 * ratio, 1, 50 / ratio);
+        terrain.geometry.scale(50 * this.ratio, 1, 50 / this.ratio);
         this.scene.add(terrain);
+    }
+
+    startRenderer()
+    {
 
         // Move camera to position
         this.camera.position.z = 30;

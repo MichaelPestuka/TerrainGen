@@ -99,6 +99,8 @@ export default class TerrainRenderer {
 
     loadWorld(premadeValues, width, height, textureURL) {
 
+        this.scene.clear()
+
         var positions, min_y, max_y
         var new_positions = [];
         var uv_coords = []
@@ -132,10 +134,10 @@ export default class TerrainRenderer {
 
         this.ratio = width / height
         // Create mesh from geometry and add to scene
-        const terrain = new THREE.Mesh(this.terrain_geometry, this.terrainShader.material);
-        terrain.geometry.center()
-        terrain.geometry.scale(50 * this.ratio, 1, 50 / this.ratio);
-        this.scene.add(terrain);
+        this.terrain = new THREE.Mesh(this.terrain_geometry, this.terrainShader.material);
+        this.terrain.geometry.center()
+        this.terrain.geometry.scale(50 * this.ratio, 1, 50 / this.ratio);
+        this.scene.add(this.terrain);
     }
 
     startRenderer()

@@ -1,7 +1,8 @@
 # Backend
 
 TerrainGenBackend/TerrainGenBackend
-
+TerrainGenBackend/go.sum
+TerrainGenBackend/__debug_bin*
 
 # Frontend
 
@@ -10,3 +11,5 @@ node_modules
 # general
 
 *.svg
+*.jpg
+*.png

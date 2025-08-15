@@ -75,6 +75,7 @@ void main() {
         if(v_Pos < landHeights[0]) {
             gl_FragColor = vec4(texture(landTextures[0], texCoord * 20.0).rgb, 1.0);
         }
+    }
 }
 `;
 

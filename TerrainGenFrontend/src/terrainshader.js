@@ -5,7 +5,9 @@ varying float v_Pos;
 varying vec2 texCoord;
 uniform float width;
 uniform float height; 
+varying vec3 v_Norm;
 void main() {
+    v_Norm = normal;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, position.y * 5.0, position.z, 1.0);
     v_Pos = (position.y + 1.0) / 2.0;
     // texCoord = vec2(position.x / float(width) + 0.5, position.z / float(height) + 0.5);
@@ -22,6 +24,7 @@ uniform sampler2D[5] landTextures;
 uniform float[5] landHeights;
 
 varying float v_Pos;
+varying vec3 v_Norm;
 varying vec2 texCoord;
 
 uniform float time;
@@ -65,6 +68,13 @@ void main() {
                     break;
             }
         }
+        float angle = acos(dot(normalize(v_Norm), vec3(0.0, 1.0, 0.0)));
+        if(angle > 0.0) {
+            // gl_FragColor = texture(landTextures[2], texCoord * 20.0).rgba;
+            angle = clamp(angle * 6.0, 0.0, 1.0);
+            gl_FragColor = gl_FragColor * (1.0-angle) + texture(landTextures[2], texCoord * 20.0).rgba * angle;
+        }
+
         if(v_Pos < landHeights[0]) {
             gl_FragColor = vec4(texture(landTextures[0], texCoord * 20.0).rgb, 1.0);
         }
@@ -95,7 +105,7 @@ void main() {
         //     gl_FragColor = vec4(texture(forestTexture, texCoord * 20.0).rgb, 1.0);
         // }
     }
-    // gl_FragColor = vec4(v_Pos, v_Pos, v_Pos, 1.0);
+    // gl_FragColor = vec4(angle, angle, angle, 1.0);
 }
 `;
 

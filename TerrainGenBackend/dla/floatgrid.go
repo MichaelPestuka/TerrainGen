@@ -30,12 +30,12 @@ func NewFloatGrid(width int, height int) FloatGrid {
 	return f
 }
 
-func (f FloatGrid) Value(x int, y int) float64 {
-	return f.values[x][y]
+func (g FloatGrid) Value(x int, y int) float64 {
+	return g.values[x][y]
 }
 
-func (f FloatGrid) SetValue(x int, y int, value float64) {
-	f.values[x][y] = value
+func (g FloatGrid) SetValue(x int, y int, value float64) {
+	g.values[x][y] = value
 }
 
 func (g Grid) PrintHeights() {
@@ -52,37 +52,37 @@ func (g Grid) PrintHeights() {
 	fmt.Printf("\n")
 }
 
-func (f *FloatGrid) BoxBlur(kernelSize int, keepPeaks bool) {
-	blurred := NewFloatGrid(f.width, f.height)
-	for x := range f.width {
-		for y := range f.height {
+func (g *FloatGrid) BoxBlur(kernelSize int, keepPeaks bool) {
+	blurred := NewFloatGrid(g.width, g.height)
+	for x := range g.width {
+		for y := range g.height {
 			sum := 0.0
 			samples := 0
 			for dx := -kernelSize; dx <= kernelSize; dx++ {
 
-				if x+dx < 0 || x+dx >= f.width {
+				if x+dx < 0 || x+dx >= g.width {
 					samples += kernelSize*2 + 1
 					continue
 				}
 
 				for dy := -kernelSize; dy <= kernelSize; dy++ {
 
-					if y+dy < 0 || y+dy >= f.height {
+					if y+dy < 0 || y+dy >= g.height {
 						samples += 1
 						continue
 					}
-					sum += float64(f.Value(x+dx, y+dy))
+					sum += float64(g.Value(x+dx, y+dy))
 					samples += 1
 				}
 			}
 			blurred.SetValue(x, y, sum/float64(samples))
-			if keepPeaks && f.Value(x, y) > 0.9 {
-				blurred.SetValue(x, y, f.Value(x, y))
+			if keepPeaks && g.Value(x, y) > 0.9 {
+				blurred.SetValue(x, y, g.Value(x, y))
 				// fmt.Printf("height: %.2f\n", f.Value(x, y))
 			}
 		}
 	}
-	*f = blurred
+	*g = blurred
 }
 
 func (g Grid) ExportHeights() []float64 {

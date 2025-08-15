@@ -28,7 +28,14 @@ function getIndices(width, height)
 export default class TerrainRenderer {
 
     constructor(worldData) {
+        this.startRenderer.bind(this);
+        this.prepareRenderer();
         this.fetchTerrain(worldData);
+        this.cliffMultiplier = 6.0;
+    }
+
+    updateShaderValue(name, newValue) {
+        this.terrainShader.SetValue(name, newValue);
     }
 
     fetchTerrain(worldData)
@@ -45,16 +52,52 @@ export default class TerrainRenderer {
         new_req.send(JSON.stringify(worldData));
     }
 
+    prepareRenderer() {
+
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+
+        this.canvas = document.querySelector("#c");
+        this.renderer = new THREE.WebGLRenderer({canvas: this.canvas, alpha: true});
+
+        this.terrain_geometry = new THREE.BufferGeometry()
+
+        // Load Texture from server
+        this.textureLoader = new THREE.TextureLoader();
+        this.textureLoader.crossOrigin = "anonymous";
+
+        // Load perlin noise texture
+
+        var perlinTexture = this.textureLoader.load('public/PerlinNoise.png');
+        perlinTexture.wrapS = THREE.RepeatWrapping
+        perlinTexture.wrapT = THREE.RepeatWrapping
+
+        var forestTexture = this.textureLoader.load('public/forest.png');
+        forestTexture.wrapS = THREE.MirroredRepeatWrapping
+        forestTexture.wrapT = THREE.MirroredRepeatWrapping
+
+        var sandTexture = this.textureLoader.load('public/sand.png');
+        sandTexture.wrapS = THREE.MirroredRepeatWrapping
+        sandTexture.wrapT = THREE.MirroredRepeatWrapping
+
+        var rockTexture = this.textureLoader.load('public/rock.jpg');
+        rockTexture.wrapS = THREE.MirroredRepeatWrapping
+        rockTexture.wrapT = THREE.MirroredRepeatWrapping
+
+        var snowTexture = this.textureLoader.load('public/snow.jpg');
+        snowTexture.wrapS = THREE.MirroredRepeatWrapping
+        snowTexture.wrapT = THREE.MirroredRepeatWrapping
+        // Create material
+        this.terrainShader = new TerrainShader(0.0, 1.0, 200, 200);
+        this.terrainShader.SetTexture("perlinTexture", perlinTexture);
+        this.terrainShader.SetTerrainTresholds([0.4, 0.5, 0.6, 0.7, 0.9])
+        this.terrainShader.SetTerrainTextures([ sandTexture, forestTexture, rockTexture, snowTexture, snowTexture]);
+        this.terrainShader.SetValue("cliffMultiplier", 6.0);
+    }
+
     startRenderer(premadeValues, width, height, textureURL)
     {
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-
-        const canvas = document.querySelector("#c");
-        const renderer = new THREE.WebGLRenderer({canvas, alpha: true});
-
-        const terrain_geometry = new THREE.BufferGeometry()
 
 
         var positions, min_y, max_y
@@ -75,76 +118,46 @@ export default class TerrainRenderer {
         uv_coords = new Float32Array(uv_coords)
         min_y = Math.min.apply(this, premadeValues);
         max_y = Math.max.apply(this, premadeValues);
-        
+        this.terrainShader.UpdateValues(min_y, max_y, width, height);
 
-        terrain_geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        terrain_geometry.setAttribute('uv', new THREE.BufferAttribute(uv_coords, 2));
-        terrain_geometry.setIndex(getIndices(width, height));
-        terrain_geometry.computeVertexNormals();
-
-
-        // Load Texture from server
-        var textureLoader = new THREE.TextureLoader();
-        textureLoader.crossOrigin = "anonymous";
-        var terrainTexture = textureLoader.load(textureURL);
+        var terrainTexture = this.textureLoader.load(textureURL);
         terrainTexture.wrapS = THREE.RepeatWrapping;
         terrainTexture.wrapT = THREE.RepeatWrapping;
         terrainTexture.minFilter = THREE.NearestFilter;
         terrainTexture.magFilter = THREE.NearestFilter;
         terrainTexture.flipY = false;
+        this.terrain_geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        this.terrain_geometry.setAttribute('uv', new THREE.BufferAttribute(uv_coords, 2));
+        this.terrain_geometry.setIndex(getIndices(width, height));
+        this.terrain_geometry.computeVertexNormals();
 
-        // Load perlin noise texture
 
-        var perlinTexture = textureLoader.load('public/PerlinNoise.png');
-        perlinTexture.wrapS = THREE.RepeatWrapping
-        perlinTexture.wrapT = THREE.RepeatWrapping
-
-        var forestTexture = textureLoader.load('public/forest.png');
-        forestTexture.wrapS = THREE.MirroredRepeatWrapping
-        forestTexture.wrapT = THREE.MirroredRepeatWrapping
-
-        var sandTexture = textureLoader.load('public/sand.png');
-        sandTexture.wrapS = THREE.MirroredRepeatWrapping
-        sandTexture.wrapT = THREE.MirroredRepeatWrapping
-
-        var rockTexture = textureLoader.load('public/rock.jpg');
-        rockTexture.wrapS = THREE.MirroredRepeatWrapping
-        rockTexture.wrapT = THREE.MirroredRepeatWrapping
-
-        var snowTexture = textureLoader.load('public/snow.jpg');
-        snowTexture.wrapS = THREE.MirroredRepeatWrapping
-        snowTexture.wrapT = THREE.MirroredRepeatWrapping
-        // Create material
-        const terrainShader = new TerrainShader(min_y, max_y, width, height);
-        terrainShader.SetTexture("perlinTexture", perlinTexture);
-        terrainShader.SetTerrainTresholds([0.4, 0.5, 0.6, 0.7, 0.9])
-        terrainShader.SetTerrainTextures([ sandTexture, forestTexture, rockTexture, snowTexture, snowTexture])
 
         // Create mesh from geometry and add to scene
-        const terrain = new THREE.Mesh(terrain_geometry, terrainShader.material);
+        const terrain = new THREE.Mesh(this.terrain_geometry, this.terrainShader.material);
         terrain.geometry.center()
         let ratio = width / height
         terrain.geometry.scale(50 * ratio, 1, 50 / ratio);
-        scene.add(terrain);
+        this.scene.add(terrain);
 
         // Move camera to position
-        camera.position.z = 30;
-        camera.position.y += 30;
-        camera.rotateX(degToRad(-45));
+        this.camera.position.z = 30;
+        this.camera.position.y += 30;
+        this.camera.rotateX(degToRad(-45));
 
-        var controls = new FlyControls(camera, canvas)
+        var controls = new FlyControls(this.camera, this.canvas)
         controls.movementSpeed = 50
         controls.dragToLook = true
-        function animate(timestamp) {
-            terrainShader.SetValue("time", timestamp)
+        var animate = (timestamp) => {
+            this.terrainShader.SetValue("time", timestamp)
             controls.update(0.01)
             // console.log(timestamp)
             // terrain.rotation.y += 0.005;
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.render( scene, camera );
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.camera.aspect = window.innerWidth / window.innerHeight;
+            this.camera.updateProjectionMatrix();
+            this.renderer.render(this.scene, this.camera );
         }
-        renderer.setAnimationLoop( animate );
+        this.renderer.setAnimationLoop( animate );
     }
 }

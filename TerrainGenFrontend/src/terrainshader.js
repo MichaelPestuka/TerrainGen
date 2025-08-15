@@ -25,6 +25,8 @@ varying vec3 v_Norm;
 varying vec2 texCoord;
 
 uniform float time;
+uniform float cliffMultiplier;
+uniform float cliffOffset;
 
 float inverseLerp(float a, float b, float value) {
     return clamp((value - a)/(b-a), 0.0, 1.0);
@@ -68,7 +70,8 @@ void main() {
         float angle = acos(dot(normalize(v_Norm), vec3(0.0, 1.0, 0.0)));
         if(angle > 0.0) {
             // gl_FragColor = texture(landTextures[2], texCoord * 20.0).rgba;
-            angle = clamp(angle * 6.0, 0.0, 1.0);
+            angle += cliffOffset;
+            angle = clamp(angle * cliffMultiplier, 0.0, 1.0);
             gl_FragColor = gl_FragColor * (1.0-angle) + texture(landTextures[2], texCoord * 20.0).rgba * angle;
         }
 
@@ -86,6 +89,13 @@ export default class TerrainShader {
             vertexShader: _VS,
             fragmentShader: _FS,
         });
+    }
+
+    UpdateValues(min_y, max_y, width, height) {
+        this.material.uniforms["min_y"] = {value : min_y}
+        this.material.uniforms["max_y"] = {value : max_y}
+        this.material.uniforms["width"] = {value : width}
+        this.material.uniforms["height"] = {value : height}
     }
 
     SetTexture(name, texture) {

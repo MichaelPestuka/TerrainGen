@@ -350,13 +350,22 @@ func (g *Grid) FillDepressions() {
 	for len(queue.Tiles) > 0 {
 		i += 1
 		current := queue.PopLowest()
-		neighbors := g.Neighbors(current)
-		for _, n := range neighbors {
+		for _, n := range g.Neighbors(current) {
 			if closed[n.x][n.y] {
 				continue
 			}
 			if current.Height >= 0.5 {
 				n.Height = math.Max(current.Height+0.002, n.Height)
+			}
+			closed[n.x][n.y] = true
+			queue.Push(n, n.Height)
+		}
+		for _, n := range g.DiagonalNeighbors(current) {
+			if closed[n.x][n.y] {
+				continue
+			}
+			if current.Height >= 0.5 {
+				n.Height = math.Max(current.Height+0.002*1.414, n.Height)
 			}
 			closed[n.x][n.y] = true
 			queue.Push(n, n.Height)

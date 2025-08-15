@@ -116,9 +116,7 @@ export default class TerrainRenderer {
         snowTexture.wrapT = THREE.MirroredRepeatWrapping
         // Create material
         const terrainShader = new TerrainShader(min_y, max_y, width, height);
-        terrainShader.SetTexture("terrainTexture", terrainTexture);
         terrainShader.SetTexture("perlinTexture", perlinTexture);
-        terrainShader.SetTexture("forestTexture", forestTexture);
         terrainShader.SetTerrainTresholds([0.4, 0.5, 0.6, 0.7, 0.9])
         terrainShader.SetTerrainTextures([ sandTexture, forestTexture, rockTexture, snowTexture, snowTexture])
 

@@ -10,14 +10,11 @@ void main() {
     v_Norm = normal;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, position.y * 5.0, position.z, 1.0);
     v_Pos = (position.y + 1.0) / 2.0;
-    // texCoord = vec2(position.x / float(width) + 0.5, position.z / float(height) + 0.5);
     texCoord = uv;
 }
 `;
 
 const _FS = `
-uniform sampler2D terrainTexture;
-uniform sampler2D forestTexture;
 uniform sampler2D perlinTexture;
 
 uniform sampler2D[5] landTextures;
@@ -78,34 +75,6 @@ void main() {
         if(v_Pos < landHeights[0]) {
             gl_FragColor = vec4(texture(landTextures[0], texCoord * 20.0).rgb, 1.0);
         }
-        // else if (v_Pos < landHeights[1]) {
-        
-        //     gl_FragColor = vec4(texture(landTextures[1], texCoord * 20.0).rgb, 1.0);
-        // }
-        // else if (v_Pos < landHeights[2]) {
-        
-        //     gl_FragColor = vec4(texture(landTextures[2], texCoord * 20.0).rgb, 1.0);
-        // }
-        // else if (v_Pos < landHeights[3]) {
-        
-        //     gl_FragColor = vec4(texture(landTextures[3], texCoord * 20.0).rgb, 1.0);
-        // }
-        // else if (v_Pos < landHeights[4]) {
-        
-        //     gl_FragColor = vec4(texture(landTextures[4], texCoord * 20.0).rgb, 1.0);
-        // }
-        // else {
-        
-        //     gl_FragColor = vec4(texture(landTextures[4], texCoord * 20.0).rgb, 1.0);
-        // }
-        // if(texture(perlinTexture, texCoord * 20.0).r > 0.5) {
-        //     gl_FragColor = vec4(v_Pos, v_Pos, v_Pos, 1.0);
-        // }
-        // else {
-        //     gl_FragColor = vec4(texture(forestTexture, texCoord * 20.0).rgb, 1.0);
-        // }
-    }
-    // gl_FragColor = vec4(angle, angle, angle, 1.0);
 }
 `;
 

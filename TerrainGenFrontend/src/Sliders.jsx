@@ -37,6 +37,7 @@ export default function InputSlider({ label, updateData, minValue, maxValue, def
             aria-labelledby="input-slider"
             min={minValue}
             max={maxValue}
+            step={maxValue / 100.0}
           />
         </Grid>
         <Grid>

@@ -1,10 +1,8 @@
 import * as THREE from 'three';
-import { degToRad } from 'three/src/math/MathUtils.js';
+import { degToRad, randFloat } from 'three/src/math/MathUtils.js';
 import TerrainShader from './terrainshader';
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
 import { OBJLoader, ThreeMFLoader } from 'three/examples/jsm/Addons.js';
-import { instancedMesh } from 'three/tsl';
-// const terrain_scale = 0.02;
 
 function getIndices(width, height)
 {
@@ -34,7 +32,6 @@ export default class TerrainRenderer {
         this.prepareRenderer();
         this.fetchTerrain(worldData);
         this.startRenderer();
-        this.cliffMultiplier = 6.0;
     }
 
     updateShaderValue(name, newValue) {
@@ -94,7 +91,7 @@ export default class TerrainRenderer {
         // Create material
         this.terrainShader = new TerrainShader(0.0, 1.0, 200, 200);
         this.terrainShader.SetTexture("perlinTexture", perlinTexture);
-        this.terrainShader.SetTerrainTresholds([0.4, 0.5, 0.7, 0.8, 0.9])
+        this.terrainShader.SetTerrainTresholds([0.5, 0.52, 0.7, 0.8, 0.9])
         this.terrainShader.SetTerrainTextures([ sandTexture, forestTexture, rockTexture, snowTexture, snowTexture]);
         this.terrainShader.SetValue("cliffMultiplier", 6.0);
     }
@@ -103,7 +100,7 @@ export default class TerrainRenderer {
 
         this.scene.clear()
 
-        var positions
+        this.positions
         var new_positions = [];
         var uv_coords = []
         for(let x = 0; x < height; x++)
@@ -117,7 +114,7 @@ export default class TerrainRenderer {
                 uv_coords.push(x / height)
             }
         }
-        positions = new Float32Array(new_positions);
+        this.positions = new Float32Array(new_positions);
         uv_coords = new Float32Array(uv_coords)
         this.terrainShader.UpdateValues(width, height);
 
@@ -127,7 +124,7 @@ export default class TerrainRenderer {
         terrainTexture.minFilter = THREE.NearestFilter;
         terrainTexture.magFilter = THREE.NearestFilter;
         terrainTexture.flipY = false;
-        this.terrain_geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        this.terrain_geometry.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
         this.terrain_geometry.setAttribute('uv', new THREE.BufferAttribute(uv_coords, 2));
         this.terrain_geometry.setIndex(getIndices(width, height));
         this.terrain_geometry.computeVertexNormals();
@@ -142,10 +139,32 @@ export default class TerrainRenderer {
     }
 
     scatterTrees() {
-        const mesh = new THREE.BoxGeometry(1, 1, 1)
-        const mat = new THREE.MeshStandardMaterial({color : 0xffffff})
-        var instanced = new THREE.InstancedMesh(mesh, mat, 10)
+        // const mesh = new THREE.BoxGeometry(0.1, 0.1, 0.1)
+        const mesh = new THREE.SphereGeometry(0.1, 5, 4)
+        const mat = new THREE.MeshBasicMaterial({color : 0x004400})
+        var instanced = new THREE.InstancedMesh(mesh, mat, this.positions.length)
         instanced.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+        instanced.matrix.decompose(instanced.position, instanced.quaternion, instanced.scale)
+        const normalsArray = this.terrain_geometry.getAttribute('normal').array
+        for(let i = 0; i < this.positions.length; i += 3) {
+            if(this.positions[i + 1] < 0.05) {
+                continue;
+            }
+            var angle = Math.acos(new THREE.Vector3(normalsArray[i], normalsArray[i + 1], normalsArray[i + 2]).normalize().dot(new THREE.Vector3(0.0, 1.0, 0.0)))
+            console.log(angle)
+            if(angle > 0.1 ) {
+                continue
+            }
+            var matrix = new THREE.Matrix4()
+            instanced.getMatrixAt(i, matrix)
+            matrix.elements[12] = this.positions[i] + randFloat(-0.1, 0.1)
+            matrix.elements[13] = this.positions[i + 1] * 5.0
+            matrix.elements[14] = this.positions[i + 2] + randFloat(-0.1, 0.1)
+    
+            instanced.setMatrixAt(i, matrix)
+        }
+        instanced.instanceMatrix.needsUpdate = true
+        console.log(instanced.position)
         this.scene.add(instanced)
         // const loader = new OBJLoader();
         // loader.load(

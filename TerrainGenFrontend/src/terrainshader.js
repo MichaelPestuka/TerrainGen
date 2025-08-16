@@ -83,17 +83,15 @@ void main() {
 `;
 
 export default class TerrainShader {
-    constructor(max_y, min_y, width, height) {
+    constructor(width, height) {
         this.material = new THREE.ShaderMaterial({
-            uniforms: {max_y : {value: max_y}, min_y : {value: min_y}, width : {value : width}, height : {value : height}},
+            uniforms: {width : {value : width}, height : {value : height}},
             vertexShader: _VS,
             fragmentShader: _FS,
         });
     }
 
-    UpdateValues(min_y, max_y, width, height) {
-        this.material.uniforms["min_y"] = {value : min_y}
-        this.material.uniforms["max_y"] = {value : max_y}
+    UpdateValues(width, height) {
         this.material.uniforms["width"] = {value : width}
         this.material.uniforms["height"] = {value : height}
     }

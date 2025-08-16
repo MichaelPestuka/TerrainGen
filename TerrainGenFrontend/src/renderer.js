@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { degToRad } from 'three/src/math/MathUtils.js';
 import TerrainShader from './terrainshader';
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
+import { OBJLoader, ThreeMFLoader } from 'three/examples/jsm/Addons.js';
+import { instancedMesh } from 'three/tsl';
 // const terrain_scale = 0.02;
 
 function getIndices(width, height)
@@ -92,7 +94,7 @@ export default class TerrainRenderer {
         // Create material
         this.terrainShader = new TerrainShader(0.0, 1.0, 200, 200);
         this.terrainShader.SetTexture("perlinTexture", perlinTexture);
-        this.terrainShader.SetTerrainTresholds([0.4, 0.5, 0.6, 0.7, 0.9])
+        this.terrainShader.SetTerrainTresholds([0.4, 0.5, 0.7, 0.8, 0.9])
         this.terrainShader.SetTerrainTextures([ sandTexture, forestTexture, rockTexture, snowTexture, snowTexture]);
         this.terrainShader.SetValue("cliffMultiplier", 6.0);
     }
@@ -101,7 +103,7 @@ export default class TerrainRenderer {
 
         this.scene.clear()
 
-        var positions, min_y, max_y
+        var positions
         var new_positions = [];
         var uv_coords = []
         for(let x = 0; x < height; x++)
@@ -117,9 +119,7 @@ export default class TerrainRenderer {
         }
         positions = new Float32Array(new_positions);
         uv_coords = new Float32Array(uv_coords)
-        min_y = Math.min.apply(this, premadeValues);
-        max_y = Math.max.apply(this, premadeValues);
-        this.terrainShader.UpdateValues(min_y, max_y, width, height);
+        this.terrainShader.UpdateValues(width, height);
 
         var terrainTexture = this.textureLoader.load(textureURL);
         terrainTexture.wrapS = THREE.RepeatWrapping;
@@ -138,6 +138,29 @@ export default class TerrainRenderer {
         this.terrain.geometry.center()
         this.terrain.geometry.scale(50 * this.ratio, 1, 50 / this.ratio);
         this.scene.add(this.terrain);
+        this.scatterTrees();
+    }
+
+    scatterTrees() {
+        const mesh = new THREE.BoxGeometry(1, 1, 1)
+        const mat = new THREE.MeshStandardMaterial({color : 0xffffff})
+        var instanced = new THREE.InstancedMesh(mesh, mat, 10)
+        instanced.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+        this.scene.add(instanced)
+        // const loader = new OBJLoader();
+        // loader.load(
+        //     'public/tree.obj',
+        //     (object) => {
+        //         console.log(object)
+        //         var instanced = new THREE.InstancedMesh(object.children[1].geometry, object.children[0].material)
+        //         // instanced.geometry.scale(100, 100);
+        //         instanced.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+        //         instanced.setMatrixAt(0, object.matrix)
+        //         this.scene.add(instanced);
+        //         console.log(instanced)
+        //     }
+        // )
+
     }
 
     startRenderer()

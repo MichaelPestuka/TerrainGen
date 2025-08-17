@@ -44,7 +44,7 @@ float inverseLerp(float a, float b, float value) {
 
 void main() {
 
-    float border = ((sin(time / 1000.0) + 1.0) / waveHeight) + 0.5; //0.46875;
+    float border = ((sin(time) + 1.0) / waveHeight) + 0.5; //0.46875;
     border -= floor(border);
     if(v_Pos <= border - 0.01) // Below waves
     {

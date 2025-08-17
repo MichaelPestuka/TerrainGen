@@ -209,7 +209,7 @@ export default class TerrainRenderer {
         controls.movementSpeed = 50
         controls.dragToLook = true
         var animate = (timestamp) => {
-            this.terrainShader.SetValue("time", timestamp)
+            this.terrainShader.SetValue("time", timestamp / 1000.0)
             controls.update(0.01)
             // console.log(timestamp)
             // terrain.rotation.y += 0.005;

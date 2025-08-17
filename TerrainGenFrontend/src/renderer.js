@@ -93,8 +93,8 @@ export default class TerrainRenderer {
         // Create material
         this.terrainShader = new TerrainShader(0.0, 1.0, 200, 200);
         this.terrainShader.SetTexture("perlinTexture", perlinTexture);
-        this.terrainShader.SetTerrainTresholds([0.5, 0.52, 0.7, 0.8, 0.9])
-        this.terrainShader.SetTerrainTextures([ sandTexture, forestTexture, rockTexture, snowTexture, snowTexture]);
+        this.terrainShader.SetTerrainTresholds([0.0, 0.5, 0.52, 0.7, 0.8])
+        this.terrainShader.SetTerrainTextures([sandTexture, sandTexture, forestTexture, rockTexture, snowTexture]);
         this.terrainShader.SetValue("cliffMultiplier", 6.0);
     }
 

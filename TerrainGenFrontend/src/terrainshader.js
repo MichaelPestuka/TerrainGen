@@ -5,10 +5,17 @@ varying float v_Pos;
 varying vec2 texCoord;
 uniform float width;
 uniform float height; 
+
 varying vec3 v_Norm;
 void main() {
     v_Norm = normal;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, position.y * 5.0, position.z, 1.0);
+    if(position.y < 0.0)
+    {
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, 0.0 * 5.0, position.z, 1.0);
+    }
+    else {
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, position.y * 5.0, position.z, 1.0);
+    }
     v_Pos = (position.y + 1.0) / 2.0;
     texCoord = uv;
 }
@@ -19,6 +26,8 @@ uniform sampler2D perlinTexture;
 
 uniform sampler2D[5] landTextures;
 uniform float[5] landHeights;
+
+uniform float waveHeight;
 
 varying float v_Pos;
 varying vec3 v_Norm;
@@ -35,7 +44,7 @@ float inverseLerp(float a, float b, float value) {
 
 void main() {
 
-    float border = ((sin(time / 1000.0) + 1.0) / 128.0) + 0.46; //0.46875;
+    float border = ((sin(time / 1000.0) + 1.0) / waveHeight) + 0.5; //0.46875;
     border -= floor(border);
     if(v_Pos <= border - 0.01) // Below waves
     {
@@ -72,12 +81,16 @@ void main() {
             // gl_FragColor = texture(landTextures[2], texCoord * 20.0).rgba;
             angle += cliffOffset;
             angle = clamp(angle * cliffMultiplier, 0.0, 1.0);
-            gl_FragColor = gl_FragColor * (1.0-angle) + texture(landTextures[2], texCoord * 20.0).rgba * angle;
+            gl_FragColor = gl_FragColor * (1.0-angle) + texture(landTextures[3], texCoord * 20.0).rgba * angle;
         }
 
         if(v_Pos < landHeights[0]) {
             gl_FragColor = vec4(texture(landTextures[0], texCoord * 20.0).rgb, 1.0);
         }
+
+        // if(v_Pos > 0.49 && v_Pos < 0.51) {
+        //     gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);        
+        // }
     }
 }
 `;

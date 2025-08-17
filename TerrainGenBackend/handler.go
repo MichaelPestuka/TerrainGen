@@ -71,8 +71,8 @@ func GenerateTerrain(w http.ResponseWriter, r *http.Request) {
 	g.Normalize()
 	g.DrawOcean(d.Sealevel)
 	// g.FindShallows(3)
-	g.FillDepressions()
-	g.OceanSloping(0.005)
+	g.FillDepressions(0.002)
+	g.OceanSloping(0.01)
 
 	// Generate texture
 	img := g.TerrainTypeTexture()

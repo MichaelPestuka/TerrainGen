@@ -1,14 +1,11 @@
-# Backend
+# Binaries and configs
 
-TerrainGenBackend/TerrainGenBackend
-TerrainGenBackend/go.sum
-TerrainGenBackend/__debug_bin*
+TerrainGenBackend
+go.sum
+__debug_bin*
+.vscode
 
-# Frontend
-
-node_modules
-
-# general
+# images
 
 *.svg
 *.jpg

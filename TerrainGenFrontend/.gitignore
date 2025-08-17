@@ -26,3 +26,9 @@ dist-ssr
 # Models
 *.obj
 *.mtl
+
+# Images
+
+*.svg
+*.jpg
+*.png

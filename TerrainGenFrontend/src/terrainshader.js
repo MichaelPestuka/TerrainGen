@@ -23,6 +23,7 @@ void main() {
 
 const _FS = `
 uniform sampler2D perlinTexture;
+uniform sampler2D seafoamTexture;
 
 uniform sampler2D[5] landTextures;
 uniform float[5] landHeights;
@@ -37,6 +38,9 @@ uniform float time;
 uniform float cliffMultiplier;
 uniform float cliffOffset;
 
+uniform float wavesOffset;
+uniform float wavesBlending;
+
 float inverseLerp(float a, float b, float value) {
     return clamp((value - a)/(b-a), 0.0, 1.0);
 }
@@ -44,16 +48,16 @@ float inverseLerp(float a, float b, float value) {
 
 void main() {
 
-    float border = ((sin(time) + 1.0) / waveHeight) + 0.5; //0.46875;
+    float border = ((sin(time) + 1.0) / waveHeight) + 0.5 - (sin(1.57) + 1.0) / waveHeight; //0.46875;
     border -= floor(border);
-    if(v_Pos <= border - 0.01) // Below waves
+    if(v_Pos <= border) // Below waves
     {
-
-        gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+        float wavyness = inverseLerp(-wavesBlending, wavesBlending, v_Pos - border + wavesOffset);
+        gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0) * (1.0 - wavyness) + texture(seafoamTexture, texCoord * 200.0) * wavyness;
     }
-    else if(v_Pos <= border && v_Pos > border - 0.01) { // Foam layer
-        gl_FragColor = vec4(0.0, 0.5, 1.0, v_Pos);
-    }
+    // else if(v_Pos <= border && v_Pos > border - 0.01) { // Foam layer
+    //     gl_FragColor = vec4(0.0, 0.5, 1.0, v_Pos);
+    // }
     else { // land
 
         for(int i = 0; i < 5; i++) {
@@ -88,7 +92,7 @@ void main() {
             gl_FragColor = vec4(texture(landTextures[0], texCoord * 20.0).rgb, 1.0);
         }
 
-        // if(v_Pos > 0.49 && v_Pos < 0.51) {
+        // if(v_Pos > 0.5 && v_Pos < 0.51) {
         //     gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);        
         // }
     }

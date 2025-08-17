@@ -90,9 +90,14 @@ export default class TerrainRenderer {
         var snowTexture = this.textureLoader.load('snow.jpg');
         snowTexture.wrapS = THREE.MirroredRepeatWrapping
         snowTexture.wrapT = THREE.MirroredRepeatWrapping
+
+        var seafoamTexture = this.textureLoader.load('seafoam.jpg');
+        seafoamTexture.wrapS = THREE.MirroredRepeatWrapping
+        seafoamTexture.wrapT = THREE.MirroredRepeatWrapping
         // Create material
         this.terrainShader = new TerrainShader(0.0, 1.0, 200, 200);
         this.terrainShader.SetTexture("perlinTexture", perlinTexture);
+        this.terrainShader.SetTexture("seafoamTexture", seafoamTexture);
         this.terrainShader.SetTerrainTresholds([0.0, 0.5, 0.52, 0.7, 0.8])
         this.terrainShader.SetTerrainTextures([sandTexture, sandTexture, forestTexture, rockTexture, snowTexture]);
         this.terrainShader.SetValue("cliffMultiplier", 6.0);

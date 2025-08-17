@@ -17,15 +17,21 @@ function App() {
   var renderer = useRef()
   const [worldSize, setSize] = useState(200)
   const [seaLevel, setSeaLevel] = useState(0.5)
-  const [cliffMultiplier, setCliffMutliplier] = useState(6.0)
-  const [cliffOffset, setCliffOffset] = useState(0.0)
+  const [cliffMultiplier, setCliffMutliplier] = useState(10.0)
+  const [cliffOffset, setCliffOffset] = useState(-0.05)
+  const [waveHeight, setWaveHeight] = useState(1024.0)
+  const [wavesOffset, setWavesOffset] = useState(0.0)
+  const [wavesBlending, setWavesBlending] = useState(0.05)
   // const [seed, setSeed] = useState(Math.floor(Math.random() * 1000000))
 
   useEffect(() => {
     // console.log(cliffMultiplier);
     renderer.current.updateShaderValue("cliffMultiplier", cliffMultiplier);
     renderer.current.updateShaderValue("cliffOffset", cliffOffset);
-  }, [cliffMultiplier, cliffOffset])
+    renderer.current.updateShaderValue("waveHeight", waveHeight);
+    renderer.current.updateShaderValue("wavesOffset", wavesOffset);
+    renderer.current.updateShaderValue("wavesBlending", wavesBlending);
+  }, [cliffMultiplier, cliffOffset, waveHeight, wavesOffset, wavesBlending])
   return (
     <>
       <canvas id="c"></canvas>
@@ -39,8 +45,11 @@ function App() {
         <TextField label={"Seed"} type='number'/>
         <InputSlider label={"World size"} updateData={setSize} minValue={50} maxValue={300} defaultValue={200} />
         <InputSlider label={"Sea level"} updateData={setSeaLevel} minValue={0.0} maxValue={1.0} defaultValue={0.5} />
-        <InputSlider label={"Cliff Multiplier"} updateData={setCliffMutliplier} minValue={0.0} maxValue={10.0} defaultValue={6.0} />
-        <InputSlider label={"Cliff offset"} updateData={setCliffOffset} minValue={-0.1} maxValue={0.1} defaultValue={0.0} />
+        <InputSlider label={"Cliff Opacity Multiplier"} updateData={setCliffMutliplier} minValue={0.0} maxValue={20.0} defaultValue={10.0} />
+        <InputSlider label={"Cliff Offset"} updateData={setCliffOffset} minValue={-0.2} maxValue={0.2} defaultValue={-0.1} />
+        <InputSlider label={"Wave Height"} updateData={setWaveHeight} minValue={128.0} maxValue={2048.0} defaultValue={1024.0} />
+        <InputSlider label={"Waves Offset"} updateData={setWavesOffset} minValue={-0.2} maxValue={0.2} defaultValue={0.0} />
+        <InputSlider label={"Waves Blending"} updateData={setWavesBlending} minValue={0.005} maxValue={0.2} defaultValue={0.05} />
       </Box>
 
       </Box>

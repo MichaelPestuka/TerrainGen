@@ -325,7 +325,7 @@ func (g *Grid) FindDepressions() []*Tile {
 	return depressions
 }
 
-func (g *Grid) FillDepressions() {
+func (g *Grid) FillDepressions(rise float64) {
 	closed := make([][]bool, g.width)
 	for x := range g.width {
 		closed[x] = make([]bool, g.height)
@@ -354,9 +354,7 @@ func (g *Grid) FillDepressions() {
 			if closed[n.x][n.y] {
 				continue
 			}
-			if current.Height >= 0.5 {
-				n.Height = math.Max(current.Height+0.002, n.Height)
-			}
+			n.Height = math.Max(current.Height+rise, n.Height)
 			closed[n.x][n.y] = true
 			queue.Push(n, n.Height)
 		}
@@ -365,7 +363,7 @@ func (g *Grid) FillDepressions() {
 				continue
 			}
 			if current.Height >= 0.5 {
-				n.Height = math.Max(current.Height+0.002*1.414, n.Height)
+				n.Height = math.Max(current.Height+rise*1.414, n.Height)
 			}
 			closed[n.x][n.y] = true
 			queue.Push(n, n.Height)

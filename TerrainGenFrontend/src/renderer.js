@@ -71,23 +71,23 @@ export default class TerrainRenderer {
 
         // Load perlin noise texture
 
-        var perlinTexture = this.textureLoader.load('public/PerlinNoise.png');
+        var perlinTexture = this.textureLoader.load('PerlinNoise.png');
         perlinTexture.wrapS = THREE.RepeatWrapping
         perlinTexture.wrapT = THREE.RepeatWrapping
 
-        var forestTexture = this.textureLoader.load('public/forest.png');
+        var forestTexture = this.textureLoader.load('forest.png');
         forestTexture.wrapS = THREE.MirroredRepeatWrapping
         forestTexture.wrapT = THREE.MirroredRepeatWrapping
 
-        var sandTexture = this.textureLoader.load('public/sand.png');
+        var sandTexture = this.textureLoader.load('sand.png');
         sandTexture.wrapS = THREE.MirroredRepeatWrapping
         sandTexture.wrapT = THREE.MirroredRepeatWrapping
 
-        var rockTexture = this.textureLoader.load('public/rock.jpg');
+        var rockTexture = this.textureLoader.load('rock.jpg');
         rockTexture.wrapS = THREE.MirroredRepeatWrapping
         rockTexture.wrapT = THREE.MirroredRepeatWrapping
 
-        var snowTexture = this.textureLoader.load('public/snow.jpg');
+        var snowTexture = this.textureLoader.load('snow.jpg');
         snowTexture.wrapS = THREE.MirroredRepeatWrapping
         snowTexture.wrapT = THREE.MirroredRepeatWrapping
         // Create material
@@ -141,26 +141,30 @@ export default class TerrainRenderer {
     }
 
     scatterTrees() {
-        // const mesh = new THREE.BoxGeometry(0.1, 0.1, 0.1)
-        const mesh = new THREE.SphereGeometry(0.15, 5, 3)
-        var treeTexture = this.textureLoader.load('public/forest.png');
-        treeTexture.colorSpace = THREE.SRGBColorSpace
+        // Load tree mesh and texture
+        const treeMesh = new THREE.SphereGeometry(0.15, 8, 6)
+        var treeTexture = this.textureLoader.load('forest.png');
+        treeTexture.colorSpace = THREE.SRGBColorSpace // fix for MeshBasicMaterial
+
         const mat = new THREE.MeshBasicMaterial({map: treeTexture})
-        var instanced = new THREE.InstancedMesh(mesh, mat, this.positions.length)
+        var instanced = new THREE.InstancedMesh(treeMesh, mat, this.positions.length)
         instanced.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
-        instanced.matrix.decompose(instanced.position, instanced.quaternion, instanced.scale)
         const normalsArray = this.terrain_geometry.getAttribute('normal').array
 
         var renderedTrees = 0;
 
         for(let i = 0; i < this.positions.length; i += 3) {
-            if(this.positions[i + 1] < 0.05) {
+            if(this.positions[i + 1] < 0.05) { // Dont render trees on sand and under water
                 continue;
             }
+
+            // Dont render trees on steep slopes
             var angle = Math.acos(new THREE.Vector3(normalsArray[i], normalsArray[i + 1], normalsArray[i + 2]).normalize().dot(new THREE.Vector3(0.0, 1.0, 0.0)))
             if(angle > 0.1 ) {
                 continue
             }
+
+            // Set tree position
             var matrix = new THREE.Matrix4()
             instanced.getMatrixAt(renderedTrees, matrix)
             matrix.elements[12] = this.positions[i] + randFloat(-0.1, 0.1)
@@ -176,7 +180,7 @@ export default class TerrainRenderer {
         this.scene.add(instanced)
         // const loader = new OBJLoader();
         // loader.load(
-        //     'public/tree.obj',
+        //     'tree.obj',
         //     (object) => {
         //         console.log(object)
         //         var instanced = new THREE.InstancedMesh(object.children[1].geometry, object.children[0].material)

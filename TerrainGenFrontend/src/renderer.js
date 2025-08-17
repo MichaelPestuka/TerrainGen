@@ -4,6 +4,8 @@ import TerrainShader from './terrainshader';
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
 import { OBJLoader, ThreeMFLoader } from 'three/examples/jsm/Addons.js';
 
+import Stats from 'three/examples/jsm/libs/stats.module.js';
+
 function getIndices(width, height)
 {
     var indices = [];
@@ -140,31 +142,37 @@ export default class TerrainRenderer {
 
     scatterTrees() {
         // const mesh = new THREE.BoxGeometry(0.1, 0.1, 0.1)
-        const mesh = new THREE.SphereGeometry(0.1, 5, 4)
-        const mat = new THREE.MeshBasicMaterial({color : 0x004400})
+        const mesh = new THREE.SphereGeometry(0.15, 5, 3)
+        var treeTexture = this.textureLoader.load('public/forest.png');
+        treeTexture.colorSpace = THREE.SRGBColorSpace
+        const mat = new THREE.MeshBasicMaterial({map: treeTexture})
         var instanced = new THREE.InstancedMesh(mesh, mat, this.positions.length)
         instanced.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
         instanced.matrix.decompose(instanced.position, instanced.quaternion, instanced.scale)
         const normalsArray = this.terrain_geometry.getAttribute('normal').array
+
+        var renderedTrees = 0;
+
         for(let i = 0; i < this.positions.length; i += 3) {
             if(this.positions[i + 1] < 0.05) {
                 continue;
             }
             var angle = Math.acos(new THREE.Vector3(normalsArray[i], normalsArray[i + 1], normalsArray[i + 2]).normalize().dot(new THREE.Vector3(0.0, 1.0, 0.0)))
-            console.log(angle)
             if(angle > 0.1 ) {
                 continue
             }
             var matrix = new THREE.Matrix4()
-            instanced.getMatrixAt(i, matrix)
+            instanced.getMatrixAt(renderedTrees, matrix)
             matrix.elements[12] = this.positions[i] + randFloat(-0.1, 0.1)
             matrix.elements[13] = this.positions[i + 1] * 5.0
             matrix.elements[14] = this.positions[i + 2] + randFloat(-0.1, 0.1)
     
-            instanced.setMatrixAt(i, matrix)
+            instanced.setMatrixAt(renderedTrees, matrix)
+            renderedTrees += 1;
         }
+        console.log("rendered %d trees", renderedTrees);
+        instanced.count = renderedTrees + 1
         instanced.instanceMatrix.needsUpdate = true
-        console.log(instanced.position)
         this.scene.add(instanced)
         // const loader = new OBJLoader();
         // loader.load(
@@ -185,6 +193,9 @@ export default class TerrainRenderer {
     startRenderer()
     {
 
+        const stats = new Stats()
+        document.body.appendChild(stats.dom)
+
         // Move camera to position
         this.camera.position.z = 30;
         this.camera.position.y += 30;
@@ -202,6 +213,8 @@ export default class TerrainRenderer {
             this.camera.aspect = window.innerWidth / window.innerHeight;
             this.camera.updateProjectionMatrix();
             this.renderer.render(this.scene, this.camera );
+
+            stats.update()
         }
         this.renderer.setAnimationLoop( animate );
     }

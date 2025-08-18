@@ -325,7 +325,7 @@ func (g *Grid) FindDepressions() []*Tile {
 	return depressions
 }
 
-func (g *Grid) FillDepressions(rise float64) {
+func (g *Grid) FillDepressions(rise float64) { // TODO with randomness added, rivers cant be rawn accurately, remove before attempting
 	closed := make([][]bool, g.width)
 	for x := range g.width {
 		closed[x] = make([]bool, g.height)
@@ -354,7 +354,7 @@ func (g *Grid) FillDepressions(rise float64) {
 			if closed[n.x][n.y] {
 				continue
 			}
-			n.Height = math.Max(current.Height+rise, n.Height)
+			n.Height = math.Max(current.Height+rise+rand.Float64()*(rise/10.0), n.Height)
 			closed[n.x][n.y] = true
 			queue.Push(n, n.Height)
 		}
@@ -363,7 +363,7 @@ func (g *Grid) FillDepressions(rise float64) {
 				continue
 			}
 			if current.Height >= 0.5 {
-				n.Height = math.Max(current.Height+rise*1.414, n.Height)
+				n.Height = math.Max(current.Height+rise*1.414+rand.Float64()*(rise/10.0), n.Height)
 			}
 			closed[n.x][n.y] = true
 			queue.Push(n, n.Height)

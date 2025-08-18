@@ -53,9 +53,11 @@ void main() {
     border -= floor(border);
     if(v_Pos <= border) // Below waves
     {
-        float wavyness = inverseLerp(-wavesBlending, wavesBlending, v_Pos - border + wavesOffset);
+        float wavesMinimum = ((sin(time - 0.8) + 1.0) / waveHeight) + 0.5 - (sin(1.57) + 1.0) / waveHeight;
+        float wavyness = inverseLerp(-wavesBlending, wavesBlending, v_Pos - wavesMinimum + wavesOffset);
+        // wavyness = 2.0 * wavyness / (wavyness + 1.0);
         vec2 foamOffset = texture(distortionTexture, texCoord + time / 100.0).xy;
-        vec4 foamColor = vec4(texture(perlinTexture, texCoord * 100.0 + foamOffset).x, texture(perlinTexture, texCoord * 100.0 + foamOffset).y, 1.0, 1.0);
+        vec4 foamColor = vec4(texture(perlinTexture, texCoord * 100.0 + foamOffset).x, texture(perlinTexture, texCoord * 100.0 + foamOffset).y + 0.5, 1.0, 1.0);
         gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0) * (1.0 - wavyness) + foamColor * wavyness;
     }
     // else if(v_Pos <= border && v_Pos > border - 0.01) { // Foam layer

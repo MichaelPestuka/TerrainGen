@@ -20,8 +20,8 @@ function App() {
   const [cliffMultiplier, setCliffMutliplier] = useState(10.0)
   const [cliffOffset, setCliffOffset] = useState(-0.05)
   const [waveHeight, setWaveHeight] = useState(1024.0)
-  const [wavesOffset, setWavesOffset] = useState(0.0)
-  const [wavesBlending, setWavesBlending] = useState(0.05)
+  const [wavesOffset, setWavesOffset] = useState(0.0015)
+  const [wavesBlending, setWavesBlending] = useState(0.03)
   // const [seed, setSeed] = useState(Math.floor(Math.random() * 1000000))
 
   useEffect(() => {
@@ -48,8 +48,8 @@ function App() {
         <InputSlider label={"Cliff Opacity Multiplier"} updateData={setCliffMutliplier} minValue={0.0} maxValue={20.0} defaultValue={10.0} />
         <InputSlider label={"Cliff Offset"} updateData={setCliffOffset} minValue={-0.2} maxValue={0.2} defaultValue={-0.1} />
         <InputSlider label={"Wave Height"} updateData={setWaveHeight} minValue={128.0} maxValue={2048.0} defaultValue={1024.0} />
-        <InputSlider label={"Waves Offset"} updateData={setWavesOffset} minValue={-0.2} maxValue={0.2} defaultValue={0.0} />
-        <InputSlider label={"Waves Blending"} updateData={setWavesBlending} minValue={0.005} maxValue={0.2} defaultValue={0.05} />
+        <InputSlider label={"Waves Offset"} updateData={setWavesOffset} minValue={-0.2} maxValue={0.2} defaultValue={0.0015} />
+        <InputSlider label={"Waves Blending"} updateData={setWavesBlending} minValue={0.001} maxValue={0.2} defaultValue={0.003} />
       </Box>
 
       </Box>

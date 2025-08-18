@@ -24,6 +24,7 @@ void main() {
 const _FS = `
 uniform sampler2D perlinTexture;
 uniform sampler2D seafoamTexture;
+uniform sampler2D distortionTexture;
 
 uniform sampler2D[5] landTextures;
 uniform float[5] landHeights;
@@ -53,7 +54,9 @@ void main() {
     if(v_Pos <= border) // Below waves
     {
         float wavyness = inverseLerp(-wavesBlending, wavesBlending, v_Pos - border + wavesOffset);
-        gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0) * (1.0 - wavyness) + texture(seafoamTexture, texCoord * 200.0) * wavyness;
+        vec2 foamOffset = texture(distortionTexture, texCoord + time / 100.0).xy;
+        vec4 foamColor = vec4(texture(perlinTexture, texCoord * 100.0 + foamOffset).x, texture(perlinTexture, texCoord * 100.0 + foamOffset).y, 1.0, 1.0);
+        gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0) * (1.0 - wavyness) + foamColor * wavyness;
     }
     // else if(v_Pos <= border && v_Pos > border - 0.01) { // Foam layer
     //     gl_FragColor = vec4(0.0, 0.5, 1.0, v_Pos);

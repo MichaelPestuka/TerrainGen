@@ -71,9 +71,13 @@ export default class TerrainRenderer {
 
         // Load perlin noise texture
 
-        var perlinTexture = this.textureLoader.load('PerlinNoise.png');
-        perlinTexture.wrapS = THREE.RepeatWrapping
-        perlinTexture.wrapT = THREE.RepeatWrapping
+        var perlinTexture = this.textureLoader.load('worley.png');
+        perlinTexture.wrapS = THREE.MirroredRepeatWrapping
+        perlinTexture.wrapT = THREE.MirroredRepeatWrapping
+
+        var distortionTexture = this.textureLoader.load('WaterDistortion.png');
+        distortionTexture.wrapS = THREE.MirroredRepeatWrapping
+        distortionTexture.wrapT = THREE.MirroredRepeatWrapping
 
         var forestTexture = this.textureLoader.load('forest.png');
         forestTexture.wrapS = THREE.MirroredRepeatWrapping
@@ -97,6 +101,7 @@ export default class TerrainRenderer {
         // Create material
         this.terrainShader = new TerrainShader(0.0, 1.0, 200, 200);
         this.terrainShader.SetTexture("perlinTexture", perlinTexture);
+        this.terrainShader.SetTexture("distortionTexture", distortionTexture);
         this.terrainShader.SetTexture("seafoamTexture", seafoamTexture);
         this.terrainShader.SetTerrainTresholds([0.0, 0.5, 0.52, 0.7, 0.8])
         this.terrainShader.SetTerrainTextures([sandTexture, sandTexture, forestTexture, rockTexture, snowTexture]);

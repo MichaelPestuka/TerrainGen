@@ -9,14 +9,13 @@ import TerrainRenderer from './renderer.js'
 function App() {
   useEffect(() => {
       console.log("Starting Renderer");
-      renderer.current = new TerrainRenderer({'Width':worldSize, 'Height':worldSize, 'Sealevel':seaLevel})
+      renderer.current = new TerrainRenderer({'Width':worldSize, 'Height':worldSize})
       // startRenderer();
   }, [])
 
 
   var renderer = useRef()
   const [worldSize, setSize] = useState(200)
-  const [seaLevel, setSeaLevel] = useState(0.5)
   const [cliffMultiplier, setCliffMutliplier] = useState(10.0)
   const [cliffOffset, setCliffOffset] = useState(-0.05)
   const [waveHeight, setWaveHeight] = useState(1024.0)
@@ -40,11 +39,9 @@ function App() {
       <Box sx={{marginRight: '0', width: '20%', height: '100%', padding: '0 32px'}}>
         <Button variant='contained' onClick={() => {
           console.log("Reloafdinf")
-          renderer.current.fetchTerrain({'Width':worldSize, 'Height':worldSize, 'Sealevel':seaLevel});
+          renderer.current.fetchTerrain({'Width':worldSize, 'Height':worldSize});
         }}> Regenerate </Button>
-        <TextField label={"Seed"} type='number'/>
         <InputSlider label={"World size"} updateData={setSize} minValue={50} maxValue={300} defaultValue={200} />
-        <InputSlider label={"Sea level"} updateData={setSeaLevel} minValue={0.0} maxValue={1.0} defaultValue={0.5} />
         <InputSlider label={"Cliff Opacity Multiplier"} updateData={setCliffMutliplier} minValue={0.0} maxValue={20.0} defaultValue={10.0} />
         <InputSlider label={"Cliff Offset"} updateData={setCliffOffset} minValue={-0.2} maxValue={0.2} defaultValue={-0.1} />
         <InputSlider label={"Wave Height"} updateData={setWaveHeight} minValue={128.0} maxValue={2048.0} defaultValue={1024.0} />

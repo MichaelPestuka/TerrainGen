@@ -2,16 +2,6 @@ package dla
 
 import "math"
 
-type Direction int
-
-const (
-	Up Direction = iota
-	Down
-	Left
-	Right
-	Origin
-)
-
 type TerrainType int
 
 const (
@@ -24,39 +14,24 @@ const (
 )
 
 type Tile struct {
-	Parent        *Tile
-	Children      []*Tile
-	Occupied      bool
 	x             int
 	y             int
-	Dir           Direction
-	EndDist       int
 	Height        float64
 	Type          TerrainType
-	Water         float64
 	ShoreDistance float64
 }
 
+// New tile constructor
 func NewTile(x int, y int) Tile {
 	var t Tile
-	t.Occupied = false
 	t.x = x
 	t.y = y
-	t.Parent = nil
-	t.Children = make([]*Tile, 0)
-	t.EndDist = -1
 	t.Height = 0.0
-	t.Water = 0.0
 	t.ShoreDistance = math.Inf(1)
 	return t
 }
 
-func (t *Tile) SetParent(Parent *Tile) {
-	t.Parent = Parent
-	Parent.Children = append(Parent.Children, t)
-
-}
-
+// Tile priority queue based on height implementation
 type TileQueueElement struct {
 	Tile     *Tile
 	Priority float64
@@ -78,21 +53,20 @@ func (t *TileQueue) Remove(index int) {
 
 }
 
-// TODO rename to highest
 func (t *TileQueue) PopHighest() *Tile {
 	if len(t.Tiles) <= 0 {
 		return nil
 	}
-	lowest := t.Tiles[0]
-	lowest_idx := 0
+	highest := t.Tiles[0]
+	highest_idx := 0
 	for idx, current := range t.Tiles {
-		if current.Priority > lowest.Priority {
-			lowest = current
-			lowest_idx = idx
+		if current.Priority > highest.Priority {
+			highest = current
+			highest_idx = idx
 		}
 	}
-	t.Remove(lowest_idx)
-	return lowest.Tile
+	t.Remove(highest_idx)
+	return highest.Tile
 }
 
 func (t *TileQueue) PopLowest() *Tile {

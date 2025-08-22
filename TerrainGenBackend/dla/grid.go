@@ -1,11 +1,12 @@
 package dla
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"math"
 	"math/rand"
+
+	"github.com/ojrac/opensimplex-go"
 )
 
 type Grid struct {
@@ -14,6 +15,7 @@ type Grid struct {
 	Tiles  [][]Tile
 }
 
+// Grid constructor
 func NewGrid(width int, height int, useRandom bool) Grid {
 	var g Grid
 	g.width = width
@@ -24,60 +26,18 @@ func NewGrid(width int, height int, useRandom bool) Grid {
 		tile_slice := make([]Tile, height)
 		for j := range height {
 			tile_slice[j] = NewTile(i, j)
-			if useRandom {
-				if rand.Float64() > 0.7 {
-					tile_slice[j].Occupied = true
-				}
-			}
 		}
 		g.Tiles[i] = tile_slice
 	}
 	return g
 }
 
+// Returns pointer to tile at coords x, y
 func (g Grid) Tile(x int, y int) *Tile {
 	if x < 0 || x >= g.width || y < 0 || y >= g.height {
 		return nil
 	}
 	return &(g.Tiles[x][y])
-}
-
-func (g Grid) SetOccupation(x int, y int, Occupation bool) {
-	g.Tiles[x][y].Occupied = Occupation
-}
-
-func (g Grid) Occupation(x int, y int) bool {
-	if x < 0 || x >= g.width || y < 0 || y >= g.height {
-		return true
-	}
-	return g.Tiles[x][y].Occupied
-}
-
-func (g Grid) PrintDirections() {
-	for y := range g.width {
-		for x := range g.height {
-			if g.Tile(x, y).Occupied {
-				switch g.Tile(x, y).Dir {
-				case Up:
-					fmt.Printf("A")
-				case Down:
-					fmt.Printf("V")
-				case Left:
-					fmt.Printf("<")
-				case Right:
-					fmt.Printf(">")
-				case Origin:
-					fmt.Printf("O")
-				default:
-					fmt.Printf("#")
-				}
-			} else {
-				fmt.Printf(".")
-			}
-		}
-		fmt.Printf("\n")
-	}
-	fmt.Printf("\n")
 }
 
 func (g Grid) Neighbors(t *Tile) []*Tile {
@@ -113,7 +73,7 @@ func (g Grid) DiagonalNeighbors(t *Tile) []*Tile { // idk just includes diagonal
 	}
 	return neighbors
 }
-func (g Grid) MooreNeighbors(t *Tile) []*Tile { // idk just includes diagonals
+func (g Grid) FullNeighbors(t *Tile) []*Tile { // Full 8 tile neighborhood
 	neighbors := make([]*Tile, 0)
 	if g.Tile(t.x+1, t.y) != nil {
 		neighbors = append(neighbors, g.Tile(t.x+1, t.y))
@@ -142,142 +102,6 @@ func (g Grid) MooreNeighbors(t *Tile) []*Tile { // idk just includes diagonals
 	return neighbors
 }
 
-func (g *Grid) UpscaleBy3() {
-
-	upscaled := NewGrid(g.width*3, g.height*3, false)
-
-	for x := range g.width {
-		for y := range g.height {
-			if !g.Tile(x, y).Occupied {
-				continue
-			}
-			upscaled.Tiles[x*3+1][y*3+1].Occupied = true
-			upscaled.Tiles[x*3+1][y*3+1].Dir = g.Tile(x, y).Dir
-
-			switch g.Tile(x, y).Dir {
-			case Up:
-				upscaled.Tiles[x*3+1][y*3].Dir = Up
-				upscaled.Tiles[x*3+1][y*3].Occupied = true
-				upscaled.Tiles[x*3+1][y*3-1].Dir = Up
-				upscaled.Tiles[x*3+1][y*3-1].Occupied = true
-
-			case Down:
-				upscaled.Tiles[x*3+1][y*3+2].Dir = Down
-				upscaled.Tiles[x*3+1][y*3+2].Occupied = true
-				upscaled.Tiles[x*3+1][y*3+3].Dir = Down
-				upscaled.Tiles[x*3+1][y*3+3].Occupied = true
-
-			case Left:
-				upscaled.Tiles[x*3][y*3+1].Dir = Left
-				upscaled.Tiles[x*3][y*3+1].Occupied = true
-				upscaled.Tiles[x*3-1][y*3+1].Dir = Left
-				upscaled.Tiles[x*3-1][y*3+1].Occupied = true
-
-			case Right:
-				upscaled.Tiles[x*3+2][y*3+1].Dir = Right
-				upscaled.Tiles[x*3+2][y*3+1].Occupied = true
-				upscaled.Tiles[x*3+3][y*3+1].Dir = Right
-				upscaled.Tiles[x*3+3][y*3+1].Occupied = true
-			}
-
-			// if x-1 >= 0 && g.Tile(x-1, y).Occupied {
-			// 	upscaled.SetOccupation(x*3, y*3+1, true)
-			// }
-			// if x+1 < g.width && g.Tile(x+1, y).Occupied {
-			// 	upscaled.SetOccupation(x*3+2, y*3+1, true)
-			// }
-			// if y-1 >= 0 && g.Tile(x, y-1).Occupied {
-			// 	upscaled.SetOccupation(x*3+1, y*3, true)
-			// }
-			// if y+1 < g.height && g.Tile(x, y+1).Occupied {
-			// 	upscaled.SetOccupation(x*3+1, y*3+2, true)
-			// }
-		}
-	}
-	*g = upscaled
-}
-
-func (g Grid) ToFloatGrid(useEndDistance bool) FloatGrid {
-	f := NewFloatGrid(g.width, g.height)
-	for x := range g.width {
-		for y := range g.height {
-			if g.Tile(x, y).Occupied {
-				if useEndDistance {
-					if g.Tile(x, y).EndDist >= 0 {
-						f.SetValue(x, y, 1.0-1.0/(1.0+float64(g.Tile(x, y).EndDist)))
-					} else {
-						f.SetValue(x, y, 0.0)
-					}
-				} else {
-					f.SetValue(x, y, 1.0)
-				}
-			}
-		}
-	}
-	return f
-}
-
-func (g *Grid) RunDLACycles(cycles int, max_steps int) {
-	g.Tiles[g.width/2][g.height/2].Occupied = true
-	g.Tiles[g.width/2][g.height/2].Dir = Origin
-	for range cycles {
-		// side := rand.Int() % 4
-		var x, y int
-		// switch side {
-		// case 0:
-		// 	x = 0
-		// 	y = rand.Int() % g.height
-		// case 1:
-		// 	x = g.width - 1
-		// 	y = rand.Int() % g.height
-		// case 2:
-		// 	x = rand.Int() % g.width
-		// 	y = 0
-		// case 3:
-		// 	x = rand.Int() % g.width
-		// 	y = g.height - 1
-		// }
-
-		x = rand.Int() % g.width
-		y = rand.Int() % g.height
-		for g.Tile(x, y).Occupied {
-			x = rand.Int() % g.width
-			y = rand.Int() % g.height
-		}
-		for range max_steps {
-			dir := rand.Int() % 4
-			dx := x
-			dy := y
-			switch dir {
-			case 0:
-				dx = min(g.width-1, dx+1)
-			case 1:
-				dx = max(0, dx-1)
-			case 2:
-				dy = min(g.height-1, dy+1)
-			case 3:
-				dy = max(0, dy-1)
-			}
-			if g.Tile(dx, dy).Occupied {
-				if dx == x-1 {
-					g.Tile(x, y).Dir = Left
-				} else if dx == x+1 {
-					g.Tile(x, y).Dir = Right
-				} else if dy == y-1 {
-					g.Tile(x, y).Dir = Up
-				} else if dy == y+1 {
-					g.Tile(x, y).Dir = Down
-				}
-				g.SetOccupation(x, y, true)
-				g.Tile(x, y).SetParent(g.Tile(dx, dy))
-				break
-			}
-			x = dx
-			y = dy
-		}
-	}
-}
-
 func (g Grid) TerrainTypeTexture() image.Image {
 	img := image.NewRGBA(image.Rect(0, 0, g.width, g.height))
 	for x := range g.width {
@@ -291,7 +115,6 @@ func (g Grid) TerrainTypeTexture() image.Image {
 				img.Set(x, y, color.RGBA{R: 255, G: 255, B: 0, A: 255})
 			case Ocean:
 				img.Set(x, y, color.RGBA{R: 0, G: 0, B: 255, A: 255})
-				// img.Set(x, y, color.RGBA{R: 0, G: 0, B: uint8(128.0 + g.Tile(x, y).Height*128.0), A: 255})
 			case Lake:
 				img.Set(x, y, color.RGBA{R: 100, G: 100, B: 255, A: 255})
 			case Shallows:
@@ -299,33 +122,11 @@ func (g Grid) TerrainTypeTexture() image.Image {
 			}
 		}
 	}
-	// DrawDepressions(img, g.FindDepressions())
-	img.Set(0, 0, color.RGBA{255, 255, 255, 255})
-	img.Set(g.width-1, g.height-1, color.RGBA{255, 255, 255, 255})
 	return img
 }
 
-func (g *Grid) FindDepressions() []*Tile {
-	depressions := make([]*Tile, 0)
-	for x := range g.width {
-		for y := range g.height {
-			current := g.Tile(x, y)
-			neighbors := g.Neighbors(current)
-			isLower := true
-			for _, n := range neighbors {
-				if current.Height >= n.Height {
-					isLower = false
-				}
-			}
-			if isLower {
-				depressions = append(depressions, current)
-			}
-		}
-	}
-	return depressions
-}
-
-func (g *Grid) FillDepressions(rise float64) { // TODO with randomness added, rivers cant be rawn accurately, remove before attempting
+// Fills above water depresions
+func (g *Grid) FillDepressions(rise float64) { // WARNING with randomness added, rivers cant be rawn accurately, remove before attempting
 	closed := make([][]bool, g.width)
 	for x := range g.width {
 		closed[x] = make([]bool, g.height)
@@ -369,16 +170,10 @@ func (g *Grid) FillDepressions(rise float64) { // TODO with randomness added, ri
 			queue.Push(n, n.Height)
 		}
 	}
-	// fmt.Printf("Cycles: %d\n", i)
 
 }
 
-func DrawDepressions(img *image.RGBA, depressions []*Tile) {
-	for _, d := range depressions {
-		img.Set(d.x, d.y, color.RGBA{255, 0, 255, 255})
-	}
-}
-
+// Sets tile types to ocean if connected to border with wiles below ocean height
 func (g *Grid) DrawOcean(oceanHeight float64) {
 	queue := make([]*Tile, 0)
 	queue = append(queue, g.Tile(0, 0))
@@ -393,7 +188,6 @@ func (g *Grid) DrawOcean(oceanHeight float64) {
 
 		if current.Height <= oceanHeight {
 			current.Type = Ocean
-			// current.Height = oceanHeight // Flatten ocean
 		} else {
 			current.Type = Coast
 			continue
@@ -414,28 +208,7 @@ func (g *Grid) DrawOcean(oceanHeight float64) {
 	}
 }
 
-func (g *Grid) FindShallows(shallowsLength int) {
-	for range shallowsLength {
-		newGrid := NewGrid(g.width, g.height, false)
-		for y := range g.height {
-			copy(newGrid.Tiles[y], g.Tiles[y])
-		}
-		for x := range g.width {
-			for y := range g.height {
-				if g.Tile(x, y).Type == Ocean {
-					for _, n := range g.Neighbors(g.Tile(x, y)) {
-						if n.Type == Coast || n.Type == Shallows {
-							newGrid.Tile(x, y).Type = Shallows
-							break
-						}
-					}
-				}
-			}
-		}
-		g.Tiles = newGrid.Tiles
-	}
-}
-
+// Changes underwater tile heights to a gentle slope, good for coastal wave rendering later
 func (g *Grid) OceanSloping(step float64) {
 	closed := make([][]bool, g.width)
 	for x := range g.width {
@@ -471,4 +244,70 @@ func (g *Grid) OceanSloping(step float64) {
 		}
 		open = open[1:]
 	}
+}
+
+// Applies a 2D bump function to make island roughly circular
+func (g *Grid) CircleFilter(edgeOffsetPercent float64, slope float64) {
+
+	smaller := g.width
+	if g.width > g.height {
+		smaller = g.height
+	}
+	edgeOffset := int(smaller * int(edgeOffsetPercent))
+	for x := range g.width {
+		for y := range g.height {
+			squares := math.Pow(float64(x-g.width/2), 2) + math.Pow(float64(y-g.height/2), 2)
+			if squares <= math.Pow(float64(g.width/2-edgeOffset), 2) {
+
+				g.Tile(x, y).Height *= math.Exp(-(slope / (float64(smaller/2-edgeOffset) - math.Pow(squares, 0.5))))
+			} else {
+				g.Tile(x, y).Height *= 0.0
+			}
+		}
+	}
+}
+
+// Fills grid with simplex noise
+func (g *Grid) SimplexFill(octaves int, frequency float64) {
+	noise := opensimplex.NewNormalized(rand.Int63())
+	amplitude := 1.0
+	for range octaves {
+		for x := range g.width {
+			for y := range g.height {
+				g.Tile(x, y).Height += amplitude * noise.Eval2(float64(x)*frequency/float64(g.width), float64(y)*frequency/float64(g.height))
+			}
+		}
+		frequency *= 2.0
+		amplitude /= 2.0
+	}
+}
+
+// Normalizes tile heights to <0; 1>
+func (g *Grid) Normalize() {
+	max := math.Inf(-1)
+	min := math.Inf(1)
+	for x := range g.width {
+		for y := range g.height {
+			min = math.Min(g.Tile(x, y).Height, min)
+			max = math.Max(g.Tile(x, y).Height, max)
+		}
+	}
+	max -= min
+	for x := range g.width {
+		for y := range g.height {
+			g.Tile(x, y).Height -= min
+			g.Tile(x, y).Height /= max
+		}
+	}
+}
+
+// Exports tile heights to a float array for sending to client
+func (g Grid) ExportHeights() []float64 {
+	exp := make([]float64, g.width*g.height)
+	for x := range g.width {
+		for y := range g.height {
+			exp[x+y*g.width] = g.Tile(x, y).Height
+		}
+	}
+	return exp
 }

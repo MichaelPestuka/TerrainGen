@@ -46,6 +46,24 @@ float inverseLerp(float a, float b, float value) {
     return clamp((value - a)/(b-a), 0.0, 1.0);
 }
 
+float wave(vec2 dir, float amplitude, float moveSpeed, float wavelength, float phase) {
+    wavelength *= 0.01;
+    moveSpeed *= 0.01;
+    float k = 2.0 * 3.141 / wavelength;
+    float w = moveSpeed * k;
+    float dotProduct = dot(dir, texCoord);
+    float periodicAmplitude  = amplitude * 0.5 * (1.0 + sin(6.282 * time * 0.001 / wavelength + phase));
+    return periodicAmplitude * sin(k * dotProduct - w * time);
+}
+
+float allWaves() {
+    float height =      wave(vec2(1.0, 1.0), 0.3, 0.5, 5.0, 0.0);
+    height +=      wave(vec2(0.5, 1.0), 0.15, 0.632356, 2.5, 0.5);
+    height +=      wave(vec2(1.0, 0.8), 0.10, 0.98976868, 2.5, 1.0);
+    height +=      wave(vec2(0.4, 0.8), 0.20, 1.231251, 2.5, 3.0);
+
+    return clamp(height / 4.0, 0.0, 1.0);
+}
 
 void main() {
 
@@ -53,16 +71,16 @@ void main() {
     border -= floor(border);
     if(v_Pos <= border) // Below waves
     {
-        float wavesMinimum = ((sin(time - 0.8) + 1.0) / waveHeight) + 0.5 - (sin(1.57) + 1.0) / waveHeight;
+        float wave_x = allWaves();
+        vec4 seaColor = vec4(0.05, 0.3, 0.8, 1.0);
+        seaColor.b += texture(perlinTexture, texCoord * 200.0).r * wave_x;
+
+        float wavesMinimum = ((sin(time - 0.8) + 1.0) / waveHeight) + 0.5 - (sin(1.57) + 1.0) / waveHeight - 0.0002;
         float wavyness = inverseLerp(-wavesBlending, wavesBlending, v_Pos - wavesMinimum + wavesOffset);
-        // wavyness = 2.0 * wavyness / (wavyness + 1.0);
         vec2 foamOffset = texture(distortionTexture, texCoord + time / 100.0).xy;
         vec4 foamColor = vec4(texture(perlinTexture, texCoord * 100.0 + foamOffset).x, texture(perlinTexture, texCoord * 100.0 + foamOffset).y + 0.5, 1.0, 1.0);
-        gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0) * (1.0 - wavyness) + foamColor * wavyness;
+        gl_FragColor = seaColor * (1.0 - wavyness) + foamColor * wavyness;
     }
-    // else if(v_Pos <= border && v_Pos > border - 0.01) { // Foam layer
-    //     gl_FragColor = vec4(0.0, 0.5, 1.0, v_Pos);
-    // }
     else { // land
 
         for(int i = 0; i < 5; i++) {

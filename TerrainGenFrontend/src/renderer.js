@@ -2,10 +2,10 @@ import * as THREE from 'three';
 import { degToRad, randFloat } from 'three/src/math/MathUtils.js';
 import TerrainShader from './terrainshader';
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
-import { OBJLoader, ThreeMFLoader } from 'three/examples/jsm/Addons.js';
 
-import Stats from 'three/examples/jsm/libs/stats.module.js';
+// import Stats from 'three/examples/jsm/libs/stats.module.js'; for FPS counter
 
+// Returns vertex indices for a plane of size width * height
 function getIndices(width, height)
 {
     var indices = [];
@@ -26,6 +26,7 @@ function getIndices(width, height)
     return indices;
 }
 
+// Class holding map rendering and loading logic
 export default class TerrainRenderer {
 
     constructor(worldData) {
@@ -35,10 +36,12 @@ export default class TerrainRenderer {
         this.startRenderer();
     }
 
+    // Helper function for changing shader unforms
     updateShaderValue(name, newValue) {
         this.terrainShader.SetValue(name, newValue);
     }
 
+    // Loads map data from server
     fetchTerrain(worldData)
     {
         let new_req = new XMLHttpRequest();
@@ -51,6 +54,7 @@ export default class TerrainRenderer {
         new_req.send(JSON.stringify(worldData));
     }
 
+    // Prepares renderer and loads textures
     prepareRenderer() {
 
         this.scene = new THREE.Scene();
@@ -61,11 +65,11 @@ export default class TerrainRenderer {
         this.renderer = new THREE.WebGLRenderer({canvas: this.canvas, alpha: true});
 
 
-        // Load Texture from server
+        // Load terrain Texture from server (Currently unused)
         this.textureLoader = new THREE.TextureLoader();
         this.textureLoader.crossOrigin = "anonymous";
 
-        // Load perlin noise texture
+        // Load noise and terrain textures 
 
         var perlinTexture = this.textureLoader.load('worley.png');
         perlinTexture.wrapS = THREE.MirroredRepeatWrapping
@@ -94,7 +98,8 @@ export default class TerrainRenderer {
         var seafoamTexture = this.textureLoader.load('seafoam.jpg');
         seafoamTexture.wrapS = THREE.MirroredRepeatWrapping
         seafoamTexture.wrapT = THREE.MirroredRepeatWrapping
-        // Create material
+
+        // Create shader instance
         this.terrainShader = new TerrainShader(0.0, 1.0, 200, 200);
         this.terrainShader.SetTexture("perlinTexture", perlinTexture);
         this.terrainShader.SetTexture("distortionTexture", distortionTexture);
@@ -130,7 +135,6 @@ export default class TerrainRenderer {
         terrainTexture.minFilter = THREE.NearestFilter;
         terrainTexture.magFilter = THREE.NearestFilter;
         terrainTexture.flipY = false;
-        console.log(this.positions.length / 3, uv_coords.length / 2)
         this.terrain_geometry = new THREE.BufferGeometry()
         this.terrain_geometry.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
         this.terrain_geometry.setAttribute('uv', new THREE.BufferAttribute(uv_coords, 2));
@@ -146,20 +150,25 @@ export default class TerrainRenderer {
         this.scatterTrees();
     }
 
+    // Creates an instanced mesh of trees scattered on the map
     scatterTrees() {
         // Load tree mesh and texture
-        const treeMesh = new THREE.SphereGeometry(0.15, 8, 6)
+        const treeMesh = new THREE.SphereGeometry(0.15, 8, 6) // Trees are just low poly spheres :)
         var treeTexture = this.textureLoader.load('forest.png');
-        treeTexture.colorSpace = THREE.SRGBColorSpace // fix for MeshBasicMaterial
-
+        treeTexture.colorSpace = THREE.SRGBColorSpace // fix for MeshBasicMaterial color rendering
         const mat = new THREE.MeshBasicMaterial({map: treeTexture})
+
+        // Create instanced mesh of trees
         var instanced = new THREE.InstancedMesh(treeMesh, mat, this.positions.length)
         instanced.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+
+        // Get vertex normals from map, used for determining slopes
         const normalsArray = this.terrain_geometry.getAttribute('normal').array
 
         var renderedTrees = 0;
         for(let i = 0; i < this.positions.length; i += 3) {
-            if(this.positions[i + 1] < 0.05) { // Dont render trees on sand and under water
+            // Don't render trees on sand and under water
+            if(this.positions[i + 1] < 0.05) {           
                 continue;
             }
 
@@ -179,26 +188,12 @@ export default class TerrainRenderer {
             instanced.setMatrixAt(renderedTrees, matrix)
             renderedTrees += 1;
         }
-        // console.log("rendered %d trees", renderedTrees);
         instanced.count = renderedTrees + 1
         instanced.instanceMatrix.needsUpdate = true
         this.scene.add(instanced)
-        // const loader = new OBJLoader();
-        // loader.load(
-        //     'tree.obj',
-        //     (object) => {
-        //         console.log(object)
-        //         var instanced = new THREE.InstancedMesh(object.children[1].geometry, object.children[0].material)
-        //         // instanced.geometry.scale(100, 100);
-        //         instanced.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
-        //         instanced.setMatrixAt(0, object.matrix)
-        //         this.scene.add(instanced);
-        //         console.log(instanced)
-        //     }
-        // )
-
     }
 
+    // Starts rendering map
     startRenderer()
     {
         // FPS counter for debugging
@@ -210,9 +205,12 @@ export default class TerrainRenderer {
         this.camera.position.y += 30;
         this.camera.rotateX(degToRad(-45));
 
+        // Basic controls
         var controls = new FlyControls(this.camera, this.canvas)
         controls.movementSpeed = 50
         controls.dragToLook = true
+
+        // Animation loop
         var animate = (timestamp) => {
             this.terrainShader.SetValue("time", timestamp / 1000.0)
             controls.update(0.01)

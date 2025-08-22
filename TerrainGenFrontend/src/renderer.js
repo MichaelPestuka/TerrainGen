@@ -47,7 +47,6 @@ export default class TerrainRenderer {
             this.loadWorld(parsed.Heights, parsed.Width, parsed.Height, parsed.TextureURL)
         });
         new_req.open("QUERY", "http://localhost:8080", true);
-        // new_req.setRequestHeader("Access-Control-Allow-Methods", "*");
         new_req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         new_req.send(JSON.stringify(worldData));
     }
@@ -61,7 +60,6 @@ export default class TerrainRenderer {
         this.canvas = document.querySelector("#c");
         this.renderer = new THREE.WebGLRenderer({canvas: this.canvas, alpha: true});
 
-        this.terrain_geometry = new THREE.BufferGeometry()
 
         // Load Texture from server
         this.textureLoader = new THREE.TextureLoader();
@@ -109,7 +107,6 @@ export default class TerrainRenderer {
     loadWorld(premadeValues, width, height, textureURL) {
         this.scene.clear()
 
-        this.positions
         var new_positions = [];
         var uv_coords = []
         for(let x = 0; x < height; x++)
@@ -133,6 +130,8 @@ export default class TerrainRenderer {
         terrainTexture.minFilter = THREE.NearestFilter;
         terrainTexture.magFilter = THREE.NearestFilter;
         terrainTexture.flipY = false;
+        console.log(this.positions.length / 3, uv_coords.length / 2)
+        this.terrain_geometry = new THREE.BufferGeometry()
         this.terrain_geometry.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
         this.terrain_geometry.setAttribute('uv', new THREE.BufferAttribute(uv_coords, 2));
         this.terrain_geometry.setIndex(getIndices(width, height));

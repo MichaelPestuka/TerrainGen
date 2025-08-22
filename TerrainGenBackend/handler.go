@@ -19,14 +19,14 @@ func DeleteTexture(filename string, delay int) {
 }
 
 func AllowCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Origin", "michaelpestuka.cz")
 	(*w).Header().Set("Access-Control-Allow-Methods", "*")
 	(*w).Header().Set("Access-Control-Allow-Headers", "*")
 }
 
 func AllowCorsFile(fs http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Origin", "michaelpestuka.cz")
 		w.Header().Set("Access-Control-Allow-Methods", "*")
 		w.Header().Set("Access-Control-Allow-Headers", "*")
 		fs.ServeHTTP(w, r)
@@ -54,7 +54,6 @@ type replyData struct {
 func GenerateTerrain(w http.ResponseWriter, r *http.Request) {
 	AllowCors(&w)
 	bytes, err := io.ReadAll(r.Body)
-	// fmt.Printf("json: %s\n", string(bytes))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
@@ -70,7 +69,6 @@ func GenerateTerrain(w http.ResponseWriter, r *http.Request) {
 	g.CircleFilter(0.05, 10.0)
 	g.Normalize()
 	g.DrawOcean(d.Sealevel)
-	// g.FindShallows(3)
 	g.FillDepressions(0.002)
 	g.OceanSloping(0.01)
 
@@ -78,7 +76,7 @@ func GenerateTerrain(w http.ResponseWriter, r *http.Request) {
 	img := g.TerrainTypeTexture()
 	imageTag := rand.Int() % 10000000
 	imageFileName := "map" + strconv.Itoa(imageTag) + ".png"
-	imgf, err := os.Create("textures/" + imageFileName)
+	imgf, _ := os.Create("textures/" + imageFileName)
 	go DeleteTexture("textures/"+imageFileName, 15) // Delete texture after some time
 	png.Encode(imgf, img)
 

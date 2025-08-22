@@ -23,7 +23,6 @@ function getIndices(width, height)
             indices.push(index + 1);
         }
     }
-    console.log(indices)
     return indices;
 }
 
@@ -45,7 +44,6 @@ export default class TerrainRenderer {
         let new_req = new XMLHttpRequest();
         new_req.addEventListener("load", () => {
             var parsed = JSON.parse(new_req.responseText)
-            console.log(parsed)
             this.loadWorld(parsed.Heights, parsed.Width, parsed.Height, parsed.TextureURL)
         });
         new_req.open("QUERY", "http://localhost:8080", true);
@@ -109,7 +107,6 @@ export default class TerrainRenderer {
     }
 
     loadWorld(premadeValues, width, height, textureURL) {
-
         this.scene.clear()
 
         this.positions
@@ -162,7 +159,6 @@ export default class TerrainRenderer {
         const normalsArray = this.terrain_geometry.getAttribute('normal').array
 
         var renderedTrees = 0;
-
         for(let i = 0; i < this.positions.length; i += 3) {
             if(this.positions[i + 1] < 0.05) { // Dont render trees on sand and under water
                 continue;
@@ -184,7 +180,7 @@ export default class TerrainRenderer {
             instanced.setMatrixAt(renderedTrees, matrix)
             renderedTrees += 1;
         }
-        console.log("rendered %d trees", renderedTrees);
+        // console.log("rendered %d trees", renderedTrees);
         instanced.count = renderedTrees + 1
         instanced.instanceMatrix.needsUpdate = true
         this.scene.add(instanced)
@@ -206,9 +202,9 @@ export default class TerrainRenderer {
 
     startRenderer()
     {
-
-        const stats = new Stats()
-        document.body.appendChild(stats.dom)
+        // FPS counter for debugging
+        // const stats = new Stats()
+        // document.body.appendChild(stats.dom)
 
         // Move camera to position
         this.camera.position.z = 30;
@@ -221,14 +217,12 @@ export default class TerrainRenderer {
         var animate = (timestamp) => {
             this.terrainShader.SetValue("time", timestamp / 1000.0)
             controls.update(0.01)
-            // console.log(timestamp)
-            // terrain.rotation.y += 0.005;
             this.renderer.setSize(window.innerWidth, window.innerHeight);
             this.camera.aspect = window.innerWidth / window.innerHeight;
             this.camera.updateProjectionMatrix();
             this.renderer.render(this.scene, this.camera );
 
-            stats.update()
+            // stats.update()
         }
         this.renderer.setAnimationLoop( animate );
     }

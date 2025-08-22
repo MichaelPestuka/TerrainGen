@@ -8,9 +8,7 @@ import TerrainRenderer from './renderer.js'
 
 function App() {
   useEffect(() => {
-      console.log("Starting Renderer");
       renderer.current = new TerrainRenderer({'Width':worldSize, 'Height':worldSize})
-      // startRenderer();
   }, [])
 
 
@@ -38,8 +36,7 @@ function App() {
 
       <Box sx={{marginRight: '0', width: '20%', height: '100%', padding: '0 32px'}}>
         <Button variant='contained' onClick={() => {
-          console.log("Reloafdinf")
-          renderer.current.fetchTerrain({'Width':worldSize, 'Height':worldSize});
+          renderer.current.fetchTerrain({'Width':worldSize, 'Height':worldSize, 'Sealevel':0.5});
         }}> Regenerate </Button>
         <InputSlider label={"World size"} updateData={setSize} minValue={50} maxValue={300} defaultValue={200} />
         <InputSlider label={"Cliff Opacity Multiplier"} updateData={setCliffMutliplier} minValue={0.0} maxValue={20.0} defaultValue={10.0} />

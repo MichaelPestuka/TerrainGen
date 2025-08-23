@@ -49,7 +49,7 @@ export default class TerrainRenderer {
             var parsed = JSON.parse(new_req.responseText)
             this.loadWorld(parsed.Heights, parsed.Width, parsed.Height, parsed.TextureURL)
         });
-        new_req.open("QUERY", "http://localhost:8080", true);
+        new_req.open("QUERY", "https://backend.michaelpestuka.cz", true);
         new_req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         new_req.send(JSON.stringify(worldData));
     }

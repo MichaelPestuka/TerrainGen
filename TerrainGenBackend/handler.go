@@ -19,14 +19,14 @@ func DeleteTexture(filename string, delay int) {
 }
 
 func AllowCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "michaelpestuka.cz")
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 	(*w).Header().Set("Access-Control-Allow-Methods", "*")
 	(*w).Header().Set("Access-Control-Allow-Headers", "*")
 }
 
 func AllowCorsFile(fs http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "michaelpestuka.cz")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "*")
 		w.Header().Set("Access-Control-Allow-Headers", "*")
 		fs.ServeHTTP(w, r)
@@ -85,7 +85,7 @@ func GenerateTerrain(w http.ResponseWriter, r *http.Request) {
 	reply.Width = d.Width
 	reply.Height = d.Height
 	reply.Heights = g.ExportHeights()
-	reply.TextureURL = "http://localhost:8080/tex/" + imageFileName
+	reply.TextureURL = "http://backend.michaelpestuka.cz/tex/" + imageFileName
 
 	j, _ := json.Marshal(reply)
 

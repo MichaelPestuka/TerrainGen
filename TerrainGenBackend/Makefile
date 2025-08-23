@@ -4,4 +4,6 @@ all:
 	go build -o TerrainGenBackend
 
 docker:
-	docker build --tag TerrainGenBackend .
+	rm ./backend.tar
+	docker build --tag terraingenbackend .
+	docker save -o ./backend.tar terraingenbackend

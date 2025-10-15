@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// Starts HTTP handler
 func main() {
 
 	httpPort := os.Getenv("PORT")

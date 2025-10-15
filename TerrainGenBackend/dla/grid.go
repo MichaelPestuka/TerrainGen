@@ -1,3 +1,5 @@
+// Package for generating heightmaps
+
 package dla
 
 import (
@@ -40,6 +42,7 @@ func (g Grid) Tile(x int, y int) *Tile {
 	return &(g.Tiles[x][y])
 }
 
+// Returns direct tile neighbors
 func (g Grid) Neighbors(t *Tile) []*Tile {
 	neighbors := make([]*Tile, 0)
 	if g.Tile(t.x+1, t.y) != nil {
@@ -57,7 +60,8 @@ func (g Grid) Neighbors(t *Tile) []*Tile {
 	return neighbors
 }
 
-func (g Grid) DiagonalNeighbors(t *Tile) []*Tile { // idk just includes diagonals
+// Only diagonal neighbor tiles
+func (g Grid) DiagonalNeighbors(t *Tile) []*Tile {
 	neighbors := make([]*Tile, 0)
 	if g.Tile(t.x+1, t.y+1) != nil {
 		neighbors = append(neighbors, g.Tile(t.x+1, t.y+1))
@@ -73,7 +77,9 @@ func (g Grid) DiagonalNeighbors(t *Tile) []*Tile { // idk just includes diagonal
 	}
 	return neighbors
 }
-func (g Grid) FullNeighbors(t *Tile) []*Tile { // Full 8 tile neighborhood
+
+// Returns direct and diagonal neighbors
+func (g Grid) FullNeighbors(t *Tile) []*Tile {
 	neighbors := make([]*Tile, 0)
 	if g.Tile(t.x+1, t.y) != nil {
 		neighbors = append(neighbors, g.Tile(t.x+1, t.y))
@@ -102,6 +108,7 @@ func (g Grid) FullNeighbors(t *Tile) []*Tile { // Full 8 tile neighborhood
 	return neighbors
 }
 
+// Generates a terrain texture based on tile types
 func (g Grid) TerrainTypeTexture() image.Image {
 	img := image.NewRGBA(image.Rect(0, 0, g.width, g.height))
 	for x := range g.width {
@@ -126,7 +133,7 @@ func (g Grid) TerrainTypeTexture() image.Image {
 }
 
 // Fills above water depresions
-func (g *Grid) FillDepressions(rise float64) { // WARNING with randomness added, rivers cant be rawn accurately, remove before attempting
+func (g *Grid) FillDepressions(rise float64) { // WARNING with randomness added, rivers cant be drawn inaccurately, remove before attempting
 	closed := make([][]bool, g.width)
 	for x := range g.width {
 		closed[x] = make([]bool, g.height)
@@ -155,7 +162,7 @@ func (g *Grid) FillDepressions(rise float64) { // WARNING with randomness added,
 			if closed[n.x][n.y] {
 				continue
 			}
-			n.Height = math.Max(current.Height+rise+rand.Float64()*(rise/10.0), n.Height)
+			n.Height = math.Max(current.Height+rise+rand.Float64()*(rise/10.0), n.Height) // RANDOMNESS ALERT
 			closed[n.x][n.y] = true
 			queue.Push(n, n.Height)
 		}
@@ -164,7 +171,7 @@ func (g *Grid) FillDepressions(rise float64) { // WARNING with randomness added,
 				continue
 			}
 			if current.Height >= 0.5 {
-				n.Height = math.Max(current.Height+rise*1.414+rand.Float64()*(rise/10.0), n.Height)
+				n.Height = math.Max(current.Height+rise*1.414+rand.Float64()*(rise/10.0), n.Height) // RANDOMNESS ALERT
 			}
 			closed[n.x][n.y] = true
 			queue.Push(n, n.Height)

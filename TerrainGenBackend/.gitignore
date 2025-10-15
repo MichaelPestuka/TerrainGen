@@ -5,6 +5,8 @@ go.sum
 __debug_bin*
 .vscode
 
+*.tar
+
 # images
 
 *.svg

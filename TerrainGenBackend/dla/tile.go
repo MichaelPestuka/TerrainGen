@@ -1,3 +1,5 @@
+// Tile struct and tile priority queue
+
 package dla
 
 import "math"

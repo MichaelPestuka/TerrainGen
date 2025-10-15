@@ -1,3 +1,7 @@
+/*
+* @author Michael Pestuka
+* HTTP handler for incoming terrain requests
+ */
 package main
 
 import (
@@ -13,17 +17,20 @@ import (
 	"time"
 )
 
+// Coroutine for deleting old unneeded terrain textures
 func DeleteTexture(filename string, delay int) {
 	time.Sleep(time.Duration(delay) * time.Second)
 	os.Remove(filename)
 }
 
+// CORS settings - not secure TODO :)
 func AllowCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 	(*w).Header().Set("Access-Control-Allow-Methods", "*")
 	(*w).Header().Set("Access-Control-Allow-Headers", "*")
 }
 
+// CORS settings - not secure TODO :)
 func AllowCorsFile(fs http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -38,12 +45,14 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	AllowCors(&w)
 }
 
+// Incoming terrain request data struct
 type jsonData struct {
 	Width    int
 	Height   int
 	Sealevel float64
 }
 
+// Data struct for reply containing terrain data
 type replyData struct {
 	Width      int
 	Height     int
@@ -51,6 +60,7 @@ type replyData struct {
 	TextureURL string
 }
 
+// Generate and send a heightmap as a reply
 func GenerateTerrain(w http.ResponseWriter, r *http.Request) {
 	AllowCors(&w)
 	bytes, err := io.ReadAll(r.Body)

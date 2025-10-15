@@ -1,3 +1,8 @@
+/**
+ * @author Michael Pestuka
+ * Main app body
+ */
+
 import { useEffect, useState, useRef } from 'react'
 import './App.css'
 import { Box, Button, Slider, TextField, Toolbar } from '@mui/material'

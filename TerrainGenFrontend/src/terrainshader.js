@@ -1,3 +1,8 @@
+/**
+ * @author Michael Pestuka
+ * A class for managing the terrain shader and changing uniform values.
+ */
+
 import * as THREE from 'three';
 
 const _VS = `

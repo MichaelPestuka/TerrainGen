@@ -1,3 +1,8 @@
+/**
+ * @author Michael Pestuka
+ * Helper rendering functions
+ */
+
 import { createNoise2D } from 'simplex-noise';
 
 function fractalNoise(x, y, noise, octaves, frequency, amplitude)

@@ -1,8 +1,14 @@
+/**
+ * @author Michael Pestuka
+ * Terrain renderer class which handles fetching from server and rendering.
+ */
+
 import * as THREE from 'three';
 import { degToRad, randFloat } from 'three/src/math/MathUtils.js';
 import TerrainShader from './terrainshader';
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
 
+// Uncomment for FPS counter
 // import Stats from 'three/examples/jsm/libs/stats.module.js'; for FPS counter
 
 // Returns vertex indices for a plane of size width * height

@@ -1,3 +1,8 @@
+/**
+ * @author Michael Pestuka
+ * UI sliders
+ */
+
 import { Slider, Box, Typography, Grid, Input } from '@mui/material'
 import { useState } from 'react'
 
